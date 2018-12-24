@@ -159,19 +159,19 @@ def training_loop(train_dataloader, opts):
 
             # FILL THIS IN
             # 1. Compute the discriminator loss on real images
-            # D_real_loss = ...
+            D_real_loss = nn.BCELoss(D(real_images), labels)
 
             # 2. Sample noise
-            # noise = ...
+            noise = fixed_noise
 
             # 3. Generate fake images from the noise
-            # fake_images = ...
+            fake_images = G(noise)
 
             # 4. Compute the discriminator loss on the fake images
-            # D_fake_loss = ...
+            D_fake_loss = nn.BCELoss(D(fake_images), labels)
 
             # 5. Compute the total discriminator loss
-            # D_total_loss = ...
+            D_total_loss = D_real_loss + D_fake_loss
 
             D_total_loss.backward()
             d_optimizer.step()
