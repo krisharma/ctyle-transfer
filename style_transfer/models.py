@@ -48,11 +48,10 @@ class DCGenerator(nn.Module):
         ###########################################
         ##   FILL THIS IN: CREATE ARCHITECTURE   ##
         ###########################################
-
-        # self.deconv1 = deconv(...)
-        # self.deconv2 = deconv(...)
-        # self.deconv3 = deconv(...)
-        # self.deconv4 = deconv(...)
+	self.deconv1 = deconv(in_channels=100, out_channels=128, kernel_size=4)
+        self.deconv2 = deconv(in_channels=128, out_channels=64, kernel_size=4)        
+	self.deconv3 = deconv(in_channels=64, out_channels=32, kernel_size=4)
+        self.deconv4 = deconv(in_channels=32, out_channels=3, kernel_size=4, padding=0)
 
     def forward(self, z):
         """Generates an image given a sample of random noise.
@@ -138,11 +137,10 @@ class DCDiscriminator(nn.Module):
         ###########################################
         ##   FILL THIS IN: CREATE ARCHITECTURE   ##
         ###########################################
-
-        # self.conv1 = conv(...)
-        # self.conv2 = conv(...)
-        # self.conv3 = conv(...)
-        # self.conv4 = conv(...)
+        self.conv1 = conv(in_channels=3, out_channels=32, kernel_size=4)
+        self.conv2 = conv(in_channels=32, out_channels=64, kernel_size=4)        
+	self.conv3 = conv(in_channels=64, out_channels=128, kernel_size=4)
+        self.conv4 = conv(in_channels=128, out_channels=1, kernel_size=4, padding=0)
 
     def forward(self, x):
 
