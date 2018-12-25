@@ -159,19 +159,19 @@ def training_loop(train_dataloader, opts):
 
             # FILL THIS IN
             # 1. Compute the discriminator loss on real images
-            D_real_loss = nn.BCELoss(D(real_images), labels)
-
+            D_real_loss = nn.BCELoss(D(real_images), labels) # We use BCELoss here, however, an implentation of least squares loss follows below
+                                                             # .5 * torch.mean((D(real_images) - 1)**2)
             # 2. Sample noise
-            noise = fixed_noise
+            noise =  fixed_noise # I figure you may also use sample_noise(opts.noise_size), fixed noise used here for consistency
 
             # 3. Generate fake images from the noise
             fake_images = G(noise)
 
             # 4. Compute the discriminator loss on the fake images
-            D_fake_loss = nn.BCELoss(D(fake_images), labels)
-
+            D_fake_loss = nn.BCELoss(D(fake_images), labels) # Least Squares Loss: .5 * torch.mean(D(fake_images)**2) 
+            
             # 5. Compute the total discriminator loss
-            D_total_loss = D_real_loss + D_fake_loss
+            D_total_loss = D_real_loss + D_fake_loss # Note that the least squares loss can be done independent of the labels here because we are taking the complement of the prediction for true and fake respectively
 
             D_total_loss.backward()
             d_optimizer.step()
@@ -184,13 +184,13 @@ def training_loop(train_dataloader, opts):
 
             # FILL THIS IN
             # 1. Sample noise
-            # noise = ...
+            noise = fixed_noise # sample_noise(opts.noise_size)
 
             # 2. Generate fake images from the noise
-            # fake_images = ...
+            fake_images = G(noise)
 
             # 3. Compute the generator loss
-            # G_loss = ...
+            G_loss = torch.mean((D(fake_image) - 1)**2) # I believe that least squares loss also has a .5 in front, but this is from the formula on the UToronto handout
 
             G_loss.backward()
             g_optimizer.step()
@@ -200,7 +200,6 @@ def training_loop(train_dataloader, opts):
             if iteration % opts.log_step == 0:
                 print('Iteration [{:4d}/{:4d}] | D_real_loss: {:6.4f} | D_fake_loss: {:6.4f} | G_loss: {:6.4f}'.format(
                        iteration, total_train_iters, D_real_loss.data[0], D_fake_loss.data[0], G_loss.data[0]))
-
             # Save the generated samples
             if iteration % opts.sample_every == 0:
                 save_samples(G, fixed_noise, iteration, opts)
