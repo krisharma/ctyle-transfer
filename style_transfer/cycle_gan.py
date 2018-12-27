@@ -231,7 +231,7 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 
         # 1. Compute the discriminator losses on real images
         D_X_real_loss = torch.mean((D_X(images_X) - 1)**2)
-        D_Y_real_loss = torch.mean((D_Y(images_Y - 1))**2) # Not sure why - 1 is inside the discriminator, may just be a typo in the PDF
+        D_Y_real_loss = torch.mean((D_Y(images_Y)- 1)**2) # Not sure why - 1 is inside the discriminator, may just be a typo in the PDF
 
         d_real_loss = D_X_real_loss + D_Y__real_loss
         d_real_loss.backward()
