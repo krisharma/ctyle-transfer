@@ -53,6 +53,9 @@ def check_dc_generator():
     state = torch.load('checker_files/dc_generator.pt')
 
     G = DCGenerator(noise_size=100, conv_dim=32)
+
+    print("FUCK: ", G.state_dict().keys())
+    print("WA: ", state['state_dict'].keys())
     G.load_state_dict(state['state_dict'])
     noise = state['input']
     dc_generator_expected = state['output']
@@ -77,6 +80,8 @@ def check_dc_generator():
 def check_dc_discriminator():
     """Checks the output and number of parameters of the DCDiscriminator class.
     """
+    
+
     state = torch.load('checker_files/dc_discriminator.pt')
 
     D = DCDiscriminator(conv_dim=32)
@@ -130,10 +135,13 @@ def check_cycle_generator():
 
 if __name__ == '__main__':
 
+ #   check_dc_generator()
+
     try:
         check_dc_generator()
     except:
         print('Crashed while checking DCGenerator. Maybe not implemented yet?')
+  
 
     try:
         check_dc_discriminator()
