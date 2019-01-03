@@ -159,19 +159,25 @@ def training_loop(train_dataloader, opts):
 
             # FILL THIS IN
             # 1. Compute the discriminator loss on real images
-            D_real_loss = nn.BCELoss(D(real_images), labels) # We use BCELoss here, however, an implentation of least squares loss follows below
-                                                             # .5 * torch.mean((D(real_images) - 1)**2)
+            D_real_loss = .5 * torch.mean((D(real_images) - 1) ** 2)
+            #D_real_loss = nn.BCELoss(D(real_images), labels) #An alternative implementation of discriminator loss using BCELoss            
+            
+
             # 2. Sample noise
-            noise =  fixed_noise # I figure you may also use sample_noise(opts.noise_size), fixed noise used here for consistency
+            noise =  sample_noise(opts.noise_size) #TODO: is this actually supposed to be "fixed_noise"? 
+
 
             # 3. Generate fake images from the noise
             fake_images = G(noise)
 
+
             # 4. Compute the discriminator loss on the fake images
-            D_fake_loss = nn.BCELoss(D(fake_images), labels) # Least Squares Loss: .5 * torch.mean(D(fake_images)**2) 
+            D_fake_loss =  .5 * torch.mean(D(fake_images)**2) 
+            #D_fake_loss = nn.BCELoss(D(fake_images), labels) #An alternative implementation of discriminator loss using BCELoss
+            
             
             # 5. Compute the total discriminator loss
-            D_total_loss = D_real_loss + D_fake_loss # Note that the least squares loss can be done independent of the labels here because we are taking the complement of the prediction for true and fake respectively
+            D_total_loss = D_real_loss + D_fake_loss
 
             D_total_loss.backward()
             d_optimizer.step()
@@ -184,13 +190,13 @@ def training_loop(train_dataloader, opts):
 
             # FILL THIS IN
             # 1. Sample noise
-            noise = fixed_noise # sample_noise(opts.noise_size)
+            noise = sample_noise(opts.noise_size) #TODO: is this actually supposed to be "fixed_noise"?
 
             # 2. Generate fake images from the noise
             fake_images = G(noise)
 
             # 3. Compute the generator loss
-            G_loss = torch.mean((D(fake_image) - 1)**2) # I believe that least squares loss also has a .5 in front, but this is from the formula on the UToronto handout
+            G_loss = torch.mean((D(fake_images) - 1)**2) # I believe that least squares loss also has a .5 in front, but this is from the formula on the UToronto handout
 
             G_loss.backward()
             g_optimizer.step()
