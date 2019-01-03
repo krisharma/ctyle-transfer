@@ -77,10 +77,10 @@ def print_models(G_XtoY, G_YtoX, D_X, D_Y):
 def create_model(opts):
     """Builds the generators and discriminators.
     """
-    G_XtoY = CycleGenerator(conv_dim=opts.g_conv_dim, init_zero_weights=opts.init_zero_weights)
-    G_YtoX = CycleGenerator(conv_dim=opts.g_conv_dim, init_zero_weights=opts.init_zero_weights)
-    D_X = DCDiscriminator(conv_dim=opts.d_conv_dim)
-    D_Y = DCDiscriminator(conv_dim=opts.d_conv_dim)
+    G_XtoY = CycleGenerator(init_zero_weights=opts.init_zero_weights)
+    G_YtoX = CycleGenerator(init_zero_weights=opts.init_zero_weights)
+    D_X = DCDiscriminator()
+    D_Y = DCDiscriminator()
 
     print_models(G_XtoY, G_YtoX, D_X, D_Y)
 
