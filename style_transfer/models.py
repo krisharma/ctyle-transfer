@@ -94,7 +94,6 @@ class CycleGenerator(nn.Module):
     
         self.conv4 = conv(in_channels=64, out_channels=3, kernel_size=7, stride=1, padding=0, reflect_pad=True, instance_norm=False)
 
-
     def forward(self, x):
         """Generates an image conditioned
            on an input image.
@@ -126,7 +125,52 @@ class CycleGenerator(nn.Module):
         return out
 
 
-class DCDiscriminator(nn.Module):
+
+
+#only here for transcription purposes
+
+    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.BatchNorm2d):
+        """Construct a PatchGAN discriminator
+        Parameters:
+            input_nc (int)  -- the number of channels in input images
+            ndf (int)       -- the number of filters in the last conv layer
+            n_layers (int)  -- the number of conv layers in the discriminator
+            norm_layer      -- normalization layer
+        """
+        super(NLayerDiscriminator, self).__init__()
+        if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
+            use_bias = norm_layer.func != nn.BatchNorm2d
+        else:
+            use_bias = norm_layer != nn.BatchNorm2d
+
+        kw = 4
+        padw = 1
+        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw), nn.LeakyReLU(0.2, True)]
+        nf_mult = 1
+        nf_mult_prev = 1
+        for n in range(1, n_layers):  # gradually increase the number of filters
+            nf_mult_prev = nf_mult
+            nf_mult = min(2 ** n, 8)
+            sequence += [
+                nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=2, padding=padw, bias=use_bias),
+                norm_layer(ndf * nf_mult),
+                nn.LeakyReLU(0.2, True)
+            ]
+
+        nf_mult_prev = nf_mult
+        nf_mult = min(2 ** n_layers, 8)
+        sequence += [
+            nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=1, padding=padw, bias=use_bias),
+            norm_layer(ndf * nf_mult),
+            nn.LeakyReLU(0.2, True)
+        ]
+
+        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        self.model = nn.Sequential(*sequence)
+
+
+
+class PatchGANDiscriminator(nn.Module):
     """Defines the architecture of the discriminator network.
        Note: Both discriminators D_X and D_Y have the same architecture in this assignment.
     """
@@ -143,21 +187,20 @@ class DCDiscriminator(nn.Module):
         #self.conv3 = conv(in_channels=64, out_channels=128, kernel_size=4)
         #self.conv4 = conv(in_channels=128, out_channels=1, kernel_size=4, padding=0, batch_norm=False)
 
+
         
-        self.conv1 = conv(in_channels=3, out_channels=64, kernel_size=4)    #input volume: 64x64x3
-        self.conv2 = conv(in_channels=64, out_channels=128, kernel_size=4)  #input volume: 32x32x64
-        self.conv3 = conv(in_channels=128, out_channels=256, kernel_size=4) #input volume: 16x16x128
-        self.conv4 = conv(in_channels=256, out_channels=512, kernel_size=4) #input volume: 8x8x256
-        self.conv5 = conv(in_channels=512, out_channels=1, kernel_size=4, padding=0, batch_norm=False) #input volume: 4x4x512
-     
+        self.conv1 = conv(in_channels=3, out_channels=64, kernel_size=4, stride=2, padding=1, instance_norm=False)    
+        self.conv2 = conv(in_channels=64, out_channels=128, kernel_size=4, stride=2, padding=1)  
+        self.conv3 = conv(in_channels=128, out_channels=256, kernel_size=4, stride=2, padding=1) 
+        self.conv4 = conv(in_channels=256, out_channels=512, kernel_size=4, stride=2, padding=1)        
+        self.conv5 = conv(in_channels=512, out_channels=1, kernel_size=4, stride=1, padding=1, instance_norm=False)     
 
        
     def forward(self, x):
+        out = F.leaky_relu(self.conv1(x), negative_slope=0.2, inplace=True)
+        out = F.leaky_relu(self.conv2(out), negative_slope=0.2, inplace=True)
+        out = F.leaky_relu(self.conv3(out), negative_slope=0.2, inplace=True)
+        out = F.leaky_relu(self.conv4(out), negative_slope=0.2, inplace=True)
+        out = self.conv5(out)
 
-        out = F.relu(self.conv1(x))
-        out = F.relu(self.conv2(out))
-        out = F.relu(self.conv3(out))
-        out = F.relu(self.conv4(out))
-        out = self.conv5(out).squeeze()
-        out = F.sigmoid(out)
         return out
