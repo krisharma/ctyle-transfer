@@ -1,10 +1,3 @@
-"""
-tf_model_input_test.py
-
-This file contains all of the functions for preprocessing and augmenting the
-test data before it is input into the network.
-"""
-
 import os
 import numpy as np
 from KS_lib.image import KSimage

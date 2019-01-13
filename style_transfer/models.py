@@ -17,59 +17,41 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def deconv(in_channels, out_channels, kernel_size, stride=2, padding=1, batch_norm=True):
+def deconv(in_channels, out_channels, kernel_size, stride=2, padding=1, output_padding=0, instance_norm=True, reflect_pad=False):
     """Creates a transposed-convolutional layer, with optional batch normalization.
     """
+    
     layers = []
-    layers.append(nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding, bias=False))
-    if batch_norm:
-        layers.append(nn.BatchNorm2d(out_channels))
-    return nn.Sequential(*layers)
+    layers.append(nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding, output_padding, bias=False))
+   
+    if instance_norm:
+        layers.append(nn.InstanceNorm2d(out_channels))
+ 
+    if reflect_pad:
+	layers.append(nn.ReflectionPad2d(3)) 
+  
+   return nn.Sequential(*layers)
 
 
-def conv(in_channels, out_channels, kernel_size, stride=2, padding=1, batch_norm=True, init_zero_weights=False):
+def conv(in_channels, out_channels, kernel_size, stride=2, padding=1, instance_norm=True, init_zero_weights=False, reflect_pad=False):
     """Creates a convolutional layer, with optional batch normalization.
     """
+    
     layers = []
+    
+    if reflect_pad:
+	layers.append(nn.ReflectionPad2d(3))
+
     conv_layer = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
     if init_zero_weights:
         conv_layer.weight.data = torch.randn(out_channels, in_channels, kernel_size, kernel_size) * 0.001
     layers.append(conv_layer)
 
-    if batch_norm:
-        layers.append(nn.BatchNorm2d(out_channels))
+    if instance_norm:
+        layers.append(nn.InstanceNorm2d(out_channels))
     return nn.Sequential(*layers)
 
 
-class DCGenerator(nn.Module):
-    def __init__(self, noise_size, conv_dim):
-        super(DCGenerator, self).__init__()
-
-        ###########################################
-        ##   FILL THIS IN: CREATE ARCHITECTURE   ##
-        ###########################################
-        self.deconv1 = deconv(in_channels=100, out_channels=128, kernel_size=4, padding=0)
-        self.deconv2 = deconv(in_channels=128, out_channels=64, kernel_size=4)        
-        self.deconv3 = deconv(in_channels=64, out_channels=32, kernel_size=4)
-        self.deconv4 = deconv(in_channels=32, out_channels=3, kernel_size=4, batch_norm=False)
-
-    def forward(self, z):
-        """Generates an image given a sample of random noise.
-
-            Input
-            -----
-                z: BS x noise_size x 1 x 1   -->  16x100x1x1
-
-            Output
-            ------
-                out: BS x channels x image_width x image_height  -->  16x3x32x32
-        """
-
-        out = F.relu(self.deconv1(z))
-        out = F.relu(self.deconv2(out))
-        out = F.relu(self.deconv3(out))
-        out = F.tanh(self.deconv4(out))
-        return out
 
 
 class ResnetBlock(nn.Module):
@@ -94,17 +76,24 @@ class CycleGenerator(nn.Module):
         ###########################################
 
         # 1. Define the encoder part of the generator (that extracts features from the input image)
-        self.conv1 = conv(in_channels=3, out_channels=64, kernel_size=4)   #input volume: 64x64x3
-        self.conv2 = conv(in_channels=64, out_channels=128, kernel_size=4) #input volume: 32x32x64
-        self.conv3 = conv(in_channels=128, out_channels=256, kernel_size=4) #input volume: 16x16x128
+        self.conv1 = conv(in_channels=3, out_channels=64, kernel_size=7, stride=1, padding=0, reflect_pad=True)  
+        self.conv2 = conv(in_channels=64, out_channels=128, kernel_size=3, stride=2, padding=1) 
+        self.conv3 = conv(in_channels=128, out_channels=256, kernel_size=3, stride=2, padding=1) 
 
         # 2. Define the transformation part of the generator
-        self.resnet_block = ResnetBlock(conv_dim=256) #input volume: 8x8x256
+        self.resnet_block1 = ResnetBlock(conv_dim=256) 
+        self.resnet_block2 = ResnetBlock(conv_dim=256)
+        self.resnet_block3 = ResnetBlock(conv_dim=256)
+        self.resnet_block4 = ResnetBlock(conv_dim=256)
+        self.resnet_block5 = ResnetBlock(conv_dim=256)
+        self.resnet_block6 = ResnetBlock(conv_dim=256) 
 
         # 3. Define the decoder part of the generator (that builds up the output image from features)
-        self.deconv1 = deconv(in_channels=256, out_channels=128, kernel_size=4) #input volume: 8x8x256
-        self.deconv2 = deconv(in_channels=128, out_channels=64, kernel_size=4) #input volume: 16x16x128
-        self.deconv3 = deconv(in_channels=64, out_channels=3, kernel_size=4, batch_norm=False) #input volume: 32x32x64
+        self.deconv1 = deconv(in_channels=256, out_channels=128, kernel_size=3, stride=2, padding=1, output_padding=1) 
+        self.deconv2 = deconv(in_channels=128, out_channels=64, kernel_size=3, stride=2, padding=1, output_padding=1) 
+    
+        self.conv4 = conv(in_channels=64, out_channels=3, kernel_size=7, stride=1, padding=0, reflect_pad=True, instance_norm=False)
+
 
     def forward(self, x):
         """Generates an image conditioned
@@ -123,7 +112,12 @@ class CycleGenerator(nn.Module):
         out = F.relu(self.conv2(out))
         out = F.relu(self.conv3(out))
 
-        out = F.relu(self.resnet_block(out))
+        out = F.relu(self.resnet_block1(out))
+        out = F.relu(self.resnet_block2(out))
+        out = F.relu(self.resnet_block3(out))
+        out = F.relu(self.resnet_block4(out))
+        out = F.relu(self.resnet_block5(out))
+        out = F.relu(self.resnet_block6(out))
 
         out = F.relu(self.deconv1(out))
         out = F.relu(self.deconv2(out))
