@@ -38,7 +38,7 @@ import scipy.misc
 # Local imports
 import utils
 from data_loader import get_emoji_loader
-from models import CycleGenerator, DCDiscriminator
+from models import CycleGenerator, PatchGANDiscriminator
 
 
 SEED = 11
@@ -79,8 +79,8 @@ def create_model(opts):
     """
     G_XtoY = CycleGenerator(init_zero_weights=opts.init_zero_weights)
     G_YtoX = CycleGenerator(init_zero_weights=opts.init_zero_weights)
-    D_X = DCDiscriminator()
-    D_Y = DCDiscriminator()
+    D_X = PatchGANDiscriminator()
+    D_Y = PatchGANDiscriminator()
 
     print_models(G_XtoY, G_YtoX, D_X, D_Y)
 
@@ -367,7 +367,7 @@ def create_parser():
     parser.add_argument('--init_zero_weights', action='store_true', default=False, help='Choose whether to initialize the generator conv weights to 0 (implements the identity function).')
 
     # Training hyper-parameters
-    parser.add_argument('--train_iters', type=int, default=600, help='The number of training iterations to run (you can Ctrl-C out earlier if you want).')
+    parser.add_argument('--train_iters', type=int, default=5000, help='The number of training iterations to run (you can Ctrl-C out earlier if you want).')
     parser.add_argument('--batch_size', type=int, default=16, help='The number of images in a batch.')
     parser.add_argument('--num_workers', type=int, default=0, help='The number of threads to use for the DataLoader.')
     parser.add_argument('--lr', type=float, default=0.0003, help='The learning rate (default 0.0003)')

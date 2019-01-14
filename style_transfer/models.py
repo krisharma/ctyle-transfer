@@ -25,12 +25,12 @@ def deconv(in_channels, out_channels, kernel_size, stride=2, padding=1, output_p
     layers.append(nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding, output_padding, bias=False))
    
     if instance_norm:
-        layers.append(nn.InstanceNorm2d(out_channels))
+       layers.append(nn.InstanceNorm2d(out_channels))
  
     if reflect_pad:
-	layers.append(nn.ReflectionPad2d(3)) 
+       layers.append(nn.ReflectionPad2d(3)) 
   
-   return nn.Sequential(*layers)
+    return nn.Sequential(*layers)
 
 
 def conv(in_channels, out_channels, kernel_size, stride=2, padding=1, instance_norm=True, init_zero_weights=False, reflect_pad=False):
@@ -40,15 +40,17 @@ def conv(in_channels, out_channels, kernel_size, stride=2, padding=1, instance_n
     layers = []
     
     if reflect_pad:
-	layers.append(nn.ReflectionPad2d(3))
+       layers.append(nn.ReflectionPad2d(3))
 
     conv_layer = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
     if init_zero_weights:
-        conv_layer.weight.data = torch.randn(out_channels, in_channels, kernel_size, kernel_size) * 0.001
+       conv_layer.weight.data = torch.randn(out_channels, in_channels, kernel_size, kernel_size) * 0.001
+    
     layers.append(conv_layer)
 
     if instance_norm:
-        layers.append(nn.InstanceNorm2d(out_channels))
+       layers.append(nn.InstanceNorm2d(out_channels))
+    
     return nn.Sequential(*layers)
 
 
@@ -120,75 +122,20 @@ class CycleGenerator(nn.Module):
 
         out = F.relu(self.deconv1(out))
         out = F.relu(self.deconv2(out))
-        out = F.tanh(self.deconv3(out))
+        out = F.tanh(self.conv4(out))
 
         return out
-
-
-
-
-#only here for transcription purposes
-
-    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.BatchNorm2d):
-        """Construct a PatchGAN discriminator
-        Parameters:
-            input_nc (int)  -- the number of channels in input images
-            ndf (int)       -- the number of filters in the last conv layer
-            n_layers (int)  -- the number of conv layers in the discriminator
-            norm_layer      -- normalization layer
-        """
-        super(NLayerDiscriminator, self).__init__()
-        if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
-            use_bias = norm_layer.func != nn.BatchNorm2d
-        else:
-            use_bias = norm_layer != nn.BatchNorm2d
-
-        kw = 4
-        padw = 1
-        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw), nn.LeakyReLU(0.2, True)]
-        nf_mult = 1
-        nf_mult_prev = 1
-        for n in range(1, n_layers):  # gradually increase the number of filters
-            nf_mult_prev = nf_mult
-            nf_mult = min(2 ** n, 8)
-            sequence += [
-                nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=2, padding=padw, bias=use_bias),
-                norm_layer(ndf * nf_mult),
-                nn.LeakyReLU(0.2, True)
-            ]
-
-        nf_mult_prev = nf_mult
-        nf_mult = min(2 ** n_layers, 8)
-        sequence += [
-            nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=1, padding=padw, bias=use_bias),
-            norm_layer(ndf * nf_mult),
-            nn.LeakyReLU(0.2, True)
-        ]
-
-        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
-        self.model = nn.Sequential(*sequence)
-
-
 
 class PatchGANDiscriminator(nn.Module):
     """Defines the architecture of the discriminator network.
        Note: Both discriminators D_X and D_Y have the same architecture in this assignment.
     """
     def __init__(self):
-        super(DCDiscriminator, self).__init__()
+        super(PatchGANDiscriminator, self).__init__()
 
         ###########################################
         ##   FILL THIS IN: CREATE ARCHITECTURE   ##
-        ###########################################
-
-        #original architecture
-        #self.conv1 = conv(in_channels=3, out_channels=32, kernel_size=4)
-        #self.conv2 = conv(in_channels=32, out_channels=64, kernel_size=4)        
-        #self.conv3 = conv(in_channels=64, out_channels=128, kernel_size=4)
-        #self.conv4 = conv(in_channels=128, out_channels=1, kernel_size=4, padding=0, batch_norm=False)
-
-
-        
+        ###########################################        
         self.conv1 = conv(in_channels=3, out_channels=64, kernel_size=4, stride=2, padding=1, instance_norm=False)    
         self.conv2 = conv(in_channels=64, out_channels=128, kernel_size=4, stride=2, padding=1)  
         self.conv3 = conv(in_channels=128, out_channels=256, kernel_size=4, stride=2, padding=1) 
@@ -201,6 +148,6 @@ class PatchGANDiscriminator(nn.Module):
         out = F.leaky_relu(self.conv2(out), negative_slope=0.2, inplace=True)
         out = F.leaky_relu(self.conv3(out), negative_slope=0.2, inplace=True)
         out = F.leaky_relu(self.conv4(out), negative_slope=0.2, inplace=True)
-        out = self.conv5(out)
+        out = F.sigmoid(self.conv5(out))
 
         return out
