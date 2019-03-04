@@ -1,0 +1,6 @@
+fix all this optimizer garbage - DONE
+learning rate decay with adam?
+more layers???
+improve preprocessing/data augmentation - Added some flipping
+improve loss function using all that lipschitz spectral stuff
+TensorBoard for PyTorch visualization of loss func.
