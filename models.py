@@ -88,9 +88,6 @@ class CycleGenerator2d(nn.Module):
         self.resnet_block4 = ResnetBlock2d(conv_dim=256)
         self.resnet_block5 = ResnetBlock2d(conv_dim=256)
         self.resnet_block6 = ResnetBlock2d(conv_dim=256)
-        self.resnet_block7 = ResnetBlock2d(conv_dim=256)
-        self.resnet_block8 = ResnetBlock2d(conv_dim=256)
-        self.resnet_block9 = ResnetBlock2d(conv_dim=256)
 
         # 3. Define the decoder part of the generator (that builds up the output image from features)
         self.deconv2d_1 = deconv2d(in_channels=256, out_channels=128, kernel_size=3, stride=2, padding=1, output_padding=1)
@@ -120,9 +117,6 @@ class CycleGenerator2d(nn.Module):
         out = F.relu(self.resnet_block4(out))
         out = F.relu(self.resnet_block5(out))
         out = F.relu(self.resnet_block6(out))
-        out = F.relu(self.resnet_block7(out))
-        out = F.relu(self.resnet_block8(out))
-        out = F.relu(self.resnet_block9(out))
 
         out = F.relu(self.deconv2d_1(out))
         out = F.relu(self.deconv2d_2(out))
