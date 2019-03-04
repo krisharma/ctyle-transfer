@@ -278,4 +278,4 @@ if __name__ == '__main__':
         opts.sample_dir = 'cyclegan_samples'
 
     print_opts(opts)
-    main(opts)
+    #main(opts)

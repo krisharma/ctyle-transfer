@@ -1,0 +1,6 @@
+MRI_Data_2d/
+checkpoints_cyclegan/
+checkpoints_saved_cyclegan/
+cyclegan_samples/
+test_images/
+
