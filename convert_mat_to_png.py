@@ -27,6 +27,7 @@ def convert_mat_to_png(img_dir):
 
             img_array = loadmat(os.path.join(img_dir, img, sub_img))['dcmat']
 
+
             if(len(os.listdir(new_sub_img_dir)) == img_array.shape[2]):
                 print("skipping because all images have been saved already: " + new_sub_img_dir)
                 os.remove(os.path.join(img_dir, img, sub_img))
@@ -37,6 +38,7 @@ def convert_mat_to_png(img_dir):
 
 
             print("saved img: " + os.path.join(new_sub_img_dir) + " " + str(img_array.shape[2]))
+            os.remove(os.path.join(img_dir, img, sub_img))
 
     print "success"
 
