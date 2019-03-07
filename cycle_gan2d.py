@@ -270,12 +270,13 @@ def create_parser():
 
 
 if __name__ == '__main__':
-
+    print("quick test!!")
     parser = create_parser()
     opts = parser.parse_args()
 
     if opts.use_cycle_consistency_loss:
         opts.sample_dir = 'cyclegan_samples'
 
+
     print_opts(opts)
-    #main(opts)
+    main(opts)
