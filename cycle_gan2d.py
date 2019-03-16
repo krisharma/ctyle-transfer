@@ -168,7 +168,6 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         dy_optimizer.step()
 
 
-
         #### GENERATOR TRAINING ####
         g_optimizer.zero_grad()
         # 1. Generate fake images that look like domain X based on real images in domain Y
@@ -196,11 +195,8 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 
         # Print the log info
         if iteration % opts.log_step == 0:
-            print('Iteration [{:5d}/{:5d}] | d_real_loss: {:6.4f} | d_Y_loss: {:6.4f} | d_X_loss: {:6.4f} | '
-                  'd_fake_loss: {:6.4f} | g_loss: {:6.4f}'.format(
-                    iteration, opts.train_iters, D_X_real_loss.data[0] + D_Y_real_loss.data[0], D_Y_loss.data[0],
-                    D_X_loss.data[0], D_X_fake_loss.data[0] + D_Y_fake_loss.data[0], g_loss.data[0]))
-
+            print('Iteration [{:5d}/{:5d}] | d_Y_loss: {:6.4f} | d_X_loss: {:6.4f} | g_loss: {:6.4f}'
+		   .format(iteration, opts.train_iters, D_Y_loss.item(), D_X_loss.item(),  g_loss.item()))
 
         # Save the generated samples
         if iteration % opts.sample_every == 0:
