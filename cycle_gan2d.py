@@ -251,8 +251,8 @@ def create_parser():
     parser.add_argument('--beta2', type=float, default=0.999)
 
     # Data sources
-    parser.add_argument('--X', type=str, default='flair', choices=['flair', 'pre_contrast'], help='Choose the type of images for domain X.')
-    parser.add_argument('--Y', type=str, default='pre_contrast', choices=['flair', 'pre_contrast'], help='Choose the type of images for domain Y.')
+    parser.add_argument('--X', type=str, default='1.1', choices=['1.1', '1.0'], help='Choose the type of images for domain X.')
+    parser.add_argument('--Y', type=str, default='1.0', choices=['1.1', '1.0'], help='Choose the type of images for domain Y.')
 
     # Saving directories and checkpoint/sample iterations
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_cyclegan')

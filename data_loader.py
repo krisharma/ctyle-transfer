@@ -11,14 +11,15 @@ from MRIDataset import MRIDataset
 """Creates training and test data loaders and pipeline."""
 def get_data_loader2d(img_type, opts):
     transform = transforms.Compose([
-                    transforms.Scale(opts.image_size),
+                    transforms.Resize(opts.image_size), #resize 512x512 images to 256x256
                     transforms.RandomHorizontalFlip(), #new addition as a data augmentation tactic
                     transforms.ToTensor(),
                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    train_path = os.path.join('./MRI_Data_2d', img_type)
-    test_path = os.path.join('./MRI_Data_2d', 'Test_{}'.format(img_type))
+    train_path = os.path.join('/root', '.local', 'share', 'Cryptomator', 'mnt', 'RBcKw0nRRJns_0', 'Train_Subtype', 'Dataset', img_type)
+    test_path = os.path.join('/root', '.local', 'share', 'Cryptomator', 'mnt', 'RBcKw0nRRJns_0', 'Train_Subtype', 'Dataset', 'Test_{}'.format(img_type))
 
+    print("TRAIN PATH: ", train_path, "TEST PATH: ", test_path)
     train_dataset = datasets.ImageFolder(train_path, transform)
     test_dataset = datasets.ImageFolder(test_path, transform)
 
