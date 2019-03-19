@@ -143,52 +143,58 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         images_Y, labels_Y = utils.to_var(images_Y), utils.to_var(labels_Y).long().squeeze()
 
 
-        #### DISCRIMINATOR TRAINING ####
+        #### DISCRIMINATOR TRAINING #### (changed so real = 0, generated = 1)
 
-        # Train with real images
+        # 1. Compute the discriminator x loss
         dx_optimizer.zero_grad()
-        dy_optimizer.zero_grad()
-
-        # 1. Compute the discriminator losses on real images
-        D_X_real_loss = torch.mean((D_X(images_X)-1)**2)
+                
+        #Real loss
+        D_X_real_loss = torch.mean((D_X(images_X))**2) #D_X_real_loss = torch.mean((D_X(images_X)-1)**2)
         fake_X = G_YtoX(images_Y)
-        D_X_fake_loss = torch.mean((D_X(fake_X))**2)
+        
+        #Fake loss
+        D_X_fake_loss = torch.mean((D_X(fake_X) - 1)**2) #D_X_fake_loss = torch.mean((D_X(fake_X))**2)
         D_X_loss = (D_X_real_loss + D_X_fake_loss) * .5
 
         D_X_loss.backward()
         dx_optimizer.step()
 
-
-        D_Y_real_loss = torch.mean((D_Y(images_Y)-1)**2) # Not sure why - 1 is inside the discriminator, may just be a typo in the PDF
+        #2. Compute the discriminator y loss
+        dy_optimizer.zero_grad()
+        
+        #Real loss
+        D_Y_real_loss = torch.mean((D_Y(images_Y))**2) #D_Y_real_loss = torch.mean((D_Y(images_Y)-1)**2) 
         fake_Y = G_XtoY(images_X)
-        D_Y_fake_loss = torch.mean((D_Y(fake_Y))**2)
+        
+        #Fake loss
+        D_Y_fake_loss = torch.mean((D_Y(fake_Y) - 1)**2) #D_Y_fake_loss = torch.mean((D_Y(fake_Y))**2)
         D_Y_loss = (D_Y_real_loss + D_Y_fake_loss) * .5
 
         D_Y_loss.backward()
         dy_optimizer.step()
 
-
-        #### GENERATOR TRAINING ####
+        #### GENERATOR TRAINING #### (changed so real = 0, generated = 1)
         g_optimizer.zero_grad()
+        
         # 1. Generate fake images that look like domain X based on real images in domain Y
         fake_X = G_YtoX(images_Y)
         # 2. Compute the generator loss based on domain X
-        g_loss = torch.mean((D_X(fake_X)-1)**2)
+        g_loss = torch.mean((D_X(fake_X)**2) #g_loss = torch.mean((D_X(fake_X)-1)**2)
 
-        if opts.use_cycle_consistency_loss:
-            reconstructed_Y = G_XtoY(fake_X)
-            cycle_consistency_loss = torch.mean((images_Y-reconstructed_Y)**2)
-            g_loss += cycle_consistency_loss
+        #cycle consistency loss for G_XtoY (add lambda?)
+        reconstructed_Y = G_XtoY(fake_X)
+        cycle_consistency_loss = torch.mean(torch.abs(images_Y-reconstructed_Y)) #replaced L2 with L1
+        g_loss += cycle_consistency_loss
 
         # 1. Generate fake images that look like domain Y based on real images in domain X
         fake_Y = G_XtoY(images_X)
         # 2. Compute the generator loss based on domain Y
-        g_loss += torch.mean((D_Y(fake_Y)-1)**2)
+        g_loss += torch.mean((D_Y(fake_Y)**2) #g_loss += torch.mean((D_Y(fake_Y)-1)**2)
 
-        if opts.use_cycle_consistency_loss:
-            reconstructed_X = G_YtoX(fake_Y)
-            cycle_consistency_loss = torch.mean((images_X-reconstructed_X)**2)
-            g_loss += cycle_consistency_loss
+        #cycle consistency loss for G_YtoX (add lambda?)
+        reconstructed_X = G_YtoX(fake_Y)
+        cycle_consistency_loss = torch.mean(torch.abs(images_X-reconstructed_X)) #replaced L2 with L1
+        g_loss += cycle_consistency_loss
 
         g_loss.backward()
         g_optimizer.step()
