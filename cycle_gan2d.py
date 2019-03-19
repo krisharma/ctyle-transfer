@@ -179,7 +179,7 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         # 1. Generate fake images that look like domain X based on real images in domain Y
         fake_X = G_YtoX(images_Y)
         # 2. Compute the generator loss based on domain X
-        g_loss = torch.mean((D_X(fake_X)**2) #g_loss = torch.mean((D_X(fake_X)-1)**2)
+        g_loss = torch.mean((D_X(fake_X)**2)) #g_loss = torch.mean((D_X(fake_X)-1)**2)
 
         #cycle consistency loss for G_XtoY (add lambda?)
         reconstructed_Y = G_XtoY(fake_X)
@@ -189,7 +189,7 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         # 1. Generate fake images that look like domain Y based on real images in domain X
         fake_Y = G_XtoY(images_X)
         # 2. Compute the generator loss based on domain Y
-        g_loss += torch.mean((D_Y(fake_Y)**2) #g_loss += torch.mean((D_Y(fake_Y)-1)**2)
+        g_loss += torch.mean((D_Y(fake_Y)**2)) #g_loss += torch.mean((D_Y(fake_Y)-1)**2)
 
         #cycle consistency loss for G_YtoX (add lambda?)
         reconstructed_X = G_YtoX(fake_Y)
