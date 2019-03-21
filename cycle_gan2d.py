@@ -85,9 +85,12 @@ def merge_images(sources, targets, opts, k=10):
 def save_samples(iteration, fixed_Y, fixed_X, G_YtoX, G_XtoY, opts):
     fake_X = G_YtoX(fixed_Y)
     fake_Y = G_XtoY(fixed_X)
+    
+    cycle_X = G_YtoX(fake_Y)
+    cycle_Y = G_XtoY(fake_X)
 
-    X, fake_X = utils.to_data(fixed_X), utils.to_data(fake_X)
-    Y, fake_Y = utils.to_data(fixed_Y), utils.to_data(fake_Y)
+    X, fake_X, cycle_X = utils.to_data(fixed_X), utils.to_data(fake_X), utils.to_data(cycle_X)
+    Y, fake_Y, cycle_Y = utils.to_data(fixed_Y), utils.to_data(fake_Y), utils.to_data(cycle_Y)
 
     merged = merge_images(X, fake_Y, opts)
     path = os.path.join(opts.sample_dir, 'sample-{:06d}-X-Y.png'.format(iteration))
@@ -96,6 +99,16 @@ def save_samples(iteration, fixed_Y, fixed_X, G_YtoX, G_XtoY, opts):
 
     merged = merge_images(Y, fake_X, opts)
     path = os.path.join(opts.sample_dir, 'sample-{:06d}-Y-X.png'.format(iteration))
+    scipy.misc.imsave(path, merged)
+    print('Saved {}'.format(path))
+    
+    merged = merge_images(X, cycle_X, opts)
+    path = os.path.join(opts.sample_dir, 'sample-{:06d}-X-cycle_X.png'.format(iteration))
+    scipy.misc.imsave(path, merged)
+    print('Saved {}'.format(path))
+
+    merged = merge_images(Y, cycle_Y, opts)
+    path = os.path.join(opts.sample_dir, 'sample-{:06d}-Y-cycle_Y.png'.format(iteration))
     scipy.misc.imsave(path, merged)
     print('Saved {}'.format(path))
 

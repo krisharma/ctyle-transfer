@@ -77,9 +77,9 @@ class CycleGenerator2d(nn.Module):
         ####   GENERATOR ARCHITECTURE   ####
 
         # 1. Define the encoder part of the generator (that extracts features from the input image)
-        self.conv1 = conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=1, padding=0, reflect_pad=True)
-        self.conv2 = conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=2, padding=1)
-        self.conv3 = conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=2, padding=1)
+        self.conv1 = conv2d(in_channels=3, out_channels=128, kernel_size=7, stride=1, padding=0, reflect_pad=True)
+        self.conv2 = conv2d(in_channels=128, out_channels=192, kernel_size=3, stride=2, padding=1)
+        self.conv3 = conv2d(in_channels=192, out_channels=256, kernel_size=3, stride=2, padding=1)
 
         # 2. Define the transformation part of the generator
         self.resnet_block1 = ResnetBlock2d(conv_dim=256)
@@ -90,9 +90,9 @@ class CycleGenerator2d(nn.Module):
         self.resnet_block6 = ResnetBlock2d(conv_dim=256)
 
         # 3. Define the decoder part of the generator (that builds up the output image from features)
-        self.deconv2d_1 = deconv2d(in_channels=256, out_channels=128, kernel_size=3, stride=2, padding=1, output_padding=1)
-        self.deconv2d_2 = deconv2d(in_channels=128, out_channels=64, kernel_size=3, stride=2, padding=1, output_padding=1)
-        self.conv4 = conv2d(in_channels=64, out_channels=3, kernel_size=7, stride=1, padding=0, reflect_pad=True, instance_norm=False)
+        self.deconv2d_1 = deconv2d(in_channels=256, out_channels=192, kernel_size=3, stride=2, padding=1, output_padding=1)
+        self.deconv2d_2 = deconv2d(in_channels=192, out_channels=128, kernel_size=3, stride=2, padding=1, output_padding=1)
+        self.conv4 = conv2d(in_channels=128, out_channels=3, kernel_size=7, stride=1, padding=0, reflect_pad=True, instance_norm=False)
 
     def forward(self, x):
         """Generates an image conditioned
@@ -130,9 +130,9 @@ class PatchGANDiscriminator2d(nn.Module):
         super(PatchGANDiscriminator2d, self).__init__()
 
         #### ARCHITECTURE ####
-        self.conv1 = conv2d(in_channels=3, out_channels=64, kernel_size=4, stride=2, padding=1, instance_norm=False)
-        self.conv2 = conv2d(in_channels=64, out_channels=128, kernel_size=4, stride=2, padding=1)
-        self.conv3 = conv2d(in_channels=128, out_channels=256, kernel_size=4, stride=2, padding=1)
+        self.conv1 = conv2d(in_channels=3, out_channels=128, kernel_size=4, stride=2, padding=1, instance_norm=False)
+        self.conv2 = conv2d(in_channels=128, out_channels=192, kernel_size=4, stride=2, padding=1)
+        self.conv3 = conv2d(in_channels=192, out_channels=256, kernel_size=4, stride=2, padding=1)
         self.conv4 = conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=2, padding=1)
         self.conv5 = conv2d(in_channels=512, out_channels=1, kernel_size=4, stride=1, padding=1, instance_norm=False)
 
