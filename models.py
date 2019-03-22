@@ -48,6 +48,7 @@ def conv2d(in_channels, out_channels, kernel_size, stride=2, padding=1, instance
        layers.append(nn.ReflectionPad2d(3))
 
     conv_layer = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
+    
     if init_zero_weights:
        conv_layer.weight.data = torch.randn(out_channels, in_channels, kernel_size, kernel_size) * 0.001
 
@@ -77,9 +78,9 @@ class CycleGenerator2d(nn.Module):
         ####   GENERATOR ARCHITECTURE   ####
 
         # 1. Define the encoder part of the generator (that extracts features from the input image)
-        self.conv1 = conv2d(in_channels=3, out_channels=128, kernel_size=7, stride=1, padding=0, reflect_pad=True)
-        self.conv2 = conv2d(in_channels=128, out_channels=192, kernel_size=3, stride=2, padding=1)
-        self.conv3 = conv2d(in_channels=192, out_channels=256, kernel_size=3, stride=2, padding=1)
+        self.conv1 = conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=1, padding=0, reflect_pad=True)
+        self.conv2 = conv2d(in_channels=64, out_channels=128, kernel_size=5, stride=2, padding=2) #prev kernel_size = 3, padding = 1
+        self.conv3 = conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=2, padding=1)
 
         # 2. Define the transformation part of the generator
         self.resnet_block1 = ResnetBlock2d(conv_dim=256)
@@ -88,11 +89,14 @@ class CycleGenerator2d(nn.Module):
         self.resnet_block4 = ResnetBlock2d(conv_dim=256)
         self.resnet_block5 = ResnetBlock2d(conv_dim=256)
         self.resnet_block6 = ResnetBlock2d(conv_dim=256)
+        self.resnet_block7 = ResnetBlock2d(conv_dim=256)
+        self.resnet_block8 = ResnetBlock2d(conv_dim=256)
+        self.resnet_block9 = ResnetBlock2d(conv_dim=256)
 
         # 3. Define the decoder part of the generator (that builds up the output image from features)
-        self.deconv2d_1 = deconv2d(in_channels=256, out_channels=192, kernel_size=3, stride=2, padding=1, output_padding=1)
-        self.deconv2d_2 = deconv2d(in_channels=192, out_channels=128, kernel_size=3, stride=2, padding=1, output_padding=1)
-        self.conv4 = conv2d(in_channels=128, out_channels=3, kernel_size=7, stride=1, padding=0, reflect_pad=True, instance_norm=False)
+        self.deconv2d_1 = deconv2d(in_channels=256, out_channels=128, kernel_size=3, stride=2, padding=1, output_padding=1)
+        self.deconv2d_2 = deconv2d(in_channels=128, out_channels=64, kernel_size=5, stride=2, padding=2, output_padding=1) #prev kernel_size = 3, padding = 1
+        self.conv4 = conv2d(in_channels=64, out_channels=3, kernel_size=7, stride=1, padding=0, reflect_pad=True, instance_norm=False)
 
     def forward(self, x):
         """Generates an image conditioned
@@ -110,18 +114,21 @@ class CycleGenerator2d(nn.Module):
         out = F.relu(self.conv1(x))
         out = F.relu(self.conv2(out))
         out = F.relu(self.conv3(out))
-
+       
         out = F.relu(self.resnet_block1(out))
         out = F.relu(self.resnet_block2(out))
         out = F.relu(self.resnet_block3(out))
         out = F.relu(self.resnet_block4(out))
         out = F.relu(self.resnet_block5(out))
         out = F.relu(self.resnet_block6(out))
-
+        out = F.relu(self.resnet_block7(out))
+        out = F.relu(self.resnet_block8(out))
+        out = F.relu(self.resnet_block9(out))
+        
         out = F.relu(self.deconv2d_1(out))
         out = F.relu(self.deconv2d_2(out))
         out = F.tanh(self.conv4(out))
-
+        
         return out
 
 """Defines the architecture of the discriminator network (both discriminators D_X and D_Y have the same architecture)."""

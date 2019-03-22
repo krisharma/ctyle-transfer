@@ -197,7 +197,7 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         #cycle consistency loss for G_XtoY (add lambda?)
         reconstructed_Y = G_XtoY(fake_X)
         cycle_consistency_loss = torch.mean(torch.abs(images_Y-reconstructed_Y)) #replaced L2 with L1
-        g_loss += cycle_consistency_loss
+        g_loss += opts.cycle_consistency_lambda * cycle_consistency_loss
 
         # 1. Generate fake images that look like domain Y based on real images in domain X
         fake_Y = G_XtoY(images_X)
@@ -207,7 +207,7 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         #cycle consistency loss for G_YtoX (add lambda?)
         reconstructed_X = G_YtoX(fake_Y)
         cycle_consistency_loss = torch.mean(torch.abs(images_X-reconstructed_X)) #replaced L2 with L1
-        g_loss += cycle_consistency_loss
+        g_loss += opts.cycle_consistency_lambda * cycle_consistency_loss
 
         g_loss.backward()
         g_optimizer.step()
@@ -268,6 +268,7 @@ def create_parser():
     parser.add_argument('--lr', type=float, default=0.0003, help='The learning rate (default 0.0003)')
     parser.add_argument('--beta1', type=float, default=0.5)
     parser.add_argument('--beta2', type=float, default=0.999)
+    parser.add_argument('--cycle_consistency_lambda', type=float, default=10.0)
 
     # Data sources
     parser.add_argument('--X', type=str, default='1.1', choices=['1.1', '1.0'], help='Choose the type of images for domain X.')
@@ -285,7 +286,6 @@ def create_parser():
 
 
 if __name__ == '__main__':
-    print("quick test!!")
     parser = create_parser()
     opts = parser.parse_args()
 
