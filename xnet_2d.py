@@ -143,18 +143,19 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
     # Create generators and discriminators
     E_XtoY, E_YtoX, D_X, D_Y, T_XtoY, T_YtoX, Q_X, Q_Y = create_model(opts)
 
+    #Create optimizers for all 4 pairs of networks
     e_params = itertools.chain(E_XtoY.parameters(), E_YtoX.parameters())
-    
-    
-    g_params = itertools.chain(G_XtoY.parameters(), G_YtoX.parameters()) # Get generator parameters
-    dx_params = D_X.parameters()   #Get discriminator parameters
-    dy_params = D_Y.parameters()   #Get discriminator parameters
+    d_params = itertools.chain(D_X.parameters(), D_Y.parameters())
+    t_params = itertools.chain(T_XtoY.parameters(), T_YtoX.parameters())
+    q_params = itertools.chain(Q_X.parameters(), Q_Y.parameters())
+   
+    e_optimizer = optim.Adam(e_params, opts.lr, [opts.beta1, opts.beta2])
+    d_optimizer = optim.Adam(d_params, opts.lr, [opts.beta1, opts.beta2])
+    t_optimizer = optim.Adam(t_params, opts.lr, [opts.beta1, opts.beta2])
+    q_optimizer = optim.Adam(q_params, opts.lr, [opts.beta1, opts.beta2])
+ 
 
-    # Create optimizers for the generators and discriminators
-    g_optimizer = optim.Adam(g_params, opts.lr, [opts.beta1, opts.beta2])
-    dx_optimizer = optim.Adam(dx_params, opts.lr, [opts.beta1, opts.beta2])
-    dy_optimizer = optim.Adam(dy_params, opts.lr, [opts.beta1, opts.beta2])
-
+    #Get iterators for training and testing data
     iter_X = iter(dataloader_X)
     iter_Y = iter(dataloader_Y)
 
