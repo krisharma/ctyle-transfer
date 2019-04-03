@@ -162,7 +162,7 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
     test_iter_X = iter(test_dataloader_X)
     test_iter_Y = iter(test_dataloader_Y)
 
-    # Set fixed data from domains X and Y for sampling. These are images that are held
+    # Set fixed data from domains X and Y for sampling. They areheld
     # constant throughout training, that allow us to inspect the model's performance.
     fixed_X = utils.to_var(test_iter_X.next()[0])
     fixed_Y = utils.to_var(test_iter_Y.next()[0])
@@ -181,73 +181,84 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         images_Y, labels_Y = iter_Y.next()
         images_Y, labels_Y = utils.to_var(images_Y), utils.to_var(labels_Y).long().squeeze()
 
-        # 1. Compute the discriminator x loss
-        dx_optimizer.zero_grad()
+        #######################
+        #Update discriminators#
+        #######################
+        
+        #Zero out discriminator optimizer
+        q_optimizer.zero_grad()
                 
-        #Real loss
-        D_X_real_loss = torch.mean((D_X(images_X))**2) #D_X_real_loss = torch.mean((D_X(images_X)-1)**2)
-        fake_X = G_YtoX(images_Y)
+        #Compute discriminator losses
+        Q_X_real_loss = torch.mean((Q_X(images_X))**2) 
+        Q_X_fake_loss = torch.mean((Q_X(D_X(E_YtoX(images_Y))) - 1)**2)
+        Q_X_loss = (Q_X_real_loss + Q_X_fake_loss) * .5
+
+        Q_Y_real_loss = torch.mean((Q_Y(images_Y))**2) 
+        Q_Y_fake_loss = torch.mean((Q_Y(D_Y(E_XtoY(images_X))) - 1)**2)
+        Q_Y_loss = (Q_Y_real_loss + Q_Y_fake_loss) * .5
+
+        L_gan = Q_X_loss + Q_Y_loss
         
-        #Fake loss
-        D_X_fake_loss = torch.mean((D_X(fake_X) - 1)**2) #D_X_fake_loss = torch.mean((D_X(fake_X))**2)
-        D_X_loss = (D_X_real_loss + D_X_fake_loss) * .5
-
-        D_X_loss.backward()
-        dx_optimizer.step()
-
-        #2. Compute the discriminator y loss
-        dy_optimizer.zero_grad()
+        #compute gradients and update weights
+        Q_X_loss.backward()
+        Q_Y_loss.backward()
+        q_optimizer.step()
+       
+      
+        ###########################
+        #Update all other networks#
+        ###########################
+        e_optimizer.zero_grad()
+        d_optimizer.zero_grad()
+        t_optimizer.zero_grad()
         
-        #Real loss
-        D_Y_real_loss = torch.mean((D_Y(images_Y))**2) #D_Y_real_loss = torch.mean((D_Y(images_Y)-1)**2) 
-        fake_Y = G_XtoY(images_X)
+
+        #Cross ID Loss
+        L_zid = torch.mean(torch.abs((D_X(T_YtoX(E_XtoY(images_X))) - images_X)))
+              + torch.mean(torch.abs((D_Y(T_XtoY(E_YtoX(images_Y))) - images_Y)))
         
-        #Fake loss
-        D_Y_fake_loss = torch.mean((D_Y(fake_Y) - 1)**2) #D_Y_fake_loss = torch.mean((D_Y(fake_Y))**2)
-        D_Y_loss = (D_Y_real_loss + D_Y_fake_loss) * .5
-
-        D_Y_loss.backward()
-        dy_optimizer.step()
-
-        #### GENERATOR TRAINING #### 
-        g_optimizer.zero_grad()
+        #ID loss
+        L_id = torch.mean(torch.abs(D_X(E_YtoX(images_X)) - images_X))
+             + torch.mean(torch.abs(D_Y(E_XtoY(images_Y)) - images_Y))
         
-        # 1. Generate fake images that look like domain X based on real images in domain Y
-        fake_X = G_YtoX(images_Y)
-        # 2. Compute the generator loss based on domain X
-        g_loss = torch.mean((D_X(fake_X)**2)) #g_loss = torch.mean((D_X(fake_X)-1)**2)
-
-        #cycle consistency loss for G_XtoY (add lambda?)
-        reconstructed_Y = G_XtoY(fake_X)
-        cycle_consistency_loss = torch.mean(torch.abs(images_Y-reconstructed_Y)) #replaced L2 with L1
-        g_loss += opts.cycle_consistency_lambda * cycle_consistency_loss
-
-        # 1. Generate fake images that look like domain Y based on real images in domain X
-        fake_Y = G_XtoY(images_X)
-        # 2. Compute the generator loss based on domain Y
-        g_loss += torch.mean((D_Y(fake_Y)**2)) #g_loss += torch.mean((D_Y(fake_Y)-1)**2)
-
-        #cycle consistency loss for G_YtoX (add lambda?)
-        reconstructed_X = G_YtoX(fake_Y)
-        cycle_consistency_loss = torch.mean(torch.abs(images_X-reconstructed_X)) #replaced L2 with L1
-        g_loss += opts.cycle_consistency_lambda * cycle_consistency_loss
-
-        g_loss.backward()
-        g_optimizer.step()
-
+        #Cross-Translation Consistency Loss
+        L_ctc = torch.mean(torch.abs(T_XtoY(E_YtoX(images_X)) - E_XtoY(images_X)))
+              + torch.mean(torch.abs(T_YtoX(E_XtoY(images_Y)) - E_YtoX(images_Y)))
+            
+        #Latent Cycle-Consistency Loss
+        L_zcyc = torch.mean(torch.abs(T_XtoY(T_YtoX(E_YtoX(images_X))) - E_YtoX(images_X)))
+               + torch.mean(torch.abs(T_YtoX(T_XtoY(E_XtoY(images_Y))) - E_XtoY(images_Y)))
+        
+        
+        #Loss term lambdas
+        lambda_gan = 1
+        lambda_id = 3
+        lambda_ctc = 3
+        lambda_zid = 6
+        lambda_zcyc = 6
+        
+        L_tot = lambda_gan * L_gan + lambda_id * L_id + lambda_ctc * L_ctc + lambda_zid * L_zid +
+                lambda_zcyc * L_zcyc
+        
+        
+        #compute gradients and update weights
+        L_tot.backward()
+        e_optimizer.zero_grad()
+        d_optimizer.zero_grad()
+        t_optimizer.zero_grad()
+     
         # Print the log info
         if iteration % opts.log_step == 0:
-            print('Iteration [{:5d}/{:5d}] | d_Y_loss: {:6.4f} | d_X_loss: {:6.4f} | g_loss: {:6.4f}'
-		   .format(iteration, opts.train_iters, D_Y_loss.item(), D_X_loss.item(),  g_loss.item()))
+            print('Iteration [{:5d}/{:5d}] | E_XtoY_loss: {:6.4f} | E_YtoX_loss: {:6.4f} | D_X_loss: {:6.4f} | D_Y_loss: {:6.4f} | T_XtoY_loss: {:6.4f} | T_YtoX_loss: {:6.4f} | Q_X_loss: {:6.4f} | Q_Y_loss: {:6.4f}'
+		   .format(iteration, opts.train_iters, E_XtoY_loss.item(), E_YtoX_loss.item(), D_X_loss.item(), D_Y_loss.item(), T_XtoY_loss.item(), T_YtoX_loss.item(), Q_X_loss.item(), Q_Y_loss.item()))
 
         # Save the generated samples
         if iteration % opts.sample_every == 0:
-            save_samples(iteration, fixed_Y, fixed_X, G_YtoX, G_XtoY, opts)
+            save_samples(iteration, fixed_Y, fixed_X, E_XtoY, E_YtoX, D_X, D_Y, T_XtoY, T_YtoX, opts)
 
         # Save the model parameters
         if iteration % opts.checkpoint_every == 0:
-            checkpoint(iteration, G_XtoY, G_YtoX, D_X, D_Y, opts)
-
+            checkpoint(iteration, E_XtoY, E_YtoX, D_X, D_Y, T_XtoY, T_YtoX, Q_X, Q_Y, opts)
 
 """Loads the data, creates checkpoint and sample directories, and starts the training loop."""
 def main(opts):
