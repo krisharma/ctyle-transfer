@@ -1,4 +1,4 @@
-,"'Manufacturer'","'Manufacturer Model Name'","'Scan options'","'Field strength (tesla)'","'Patient position during MRI'",'Image position patient',"'Contrast agent'","'Contrast bolus volume (mL)'",'TR (repetition time)','TE (echo time)',"'Acquisition matrix'","'Slice thickness'","'Rows'","'Columns'","'Reconstruction'","'Flip angle'","'FOV computed (field of view) in mm'"
+'Patient ID', 'Manufacturer','Manufacturer Model Name','Scan options','Field strength (tesla)','Patient position during MRI','Image position patient','Contrast agent','Contrast bolus volume (mL)','TR (repetition time)','TE (echo time)','Acquisition matrix','Slice thickness','Rows','Columns','Reconstruction','Flip angle','FOV computed (field of view) in mm'
 BRCA_DUKE_INVA02_38565,0,4,1,1,0,NaN,4,NaN,5.368,2.604,4,19,2,2,12,2,17
 BRCA_DUKE_INVA02_04111,2,0,5,1,1,NaN,3,14,4.31,1.33,9,18,1,1,NaN,2,15
 BRCA_DUKE_INVA02_11391,0,1,1,1,0,NaN,3,NaN,5.34,2.476,3,18,2,2,11,2,15
