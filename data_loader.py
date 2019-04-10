@@ -16,8 +16,8 @@ def get_data_loader2d(img_type, opts):
                     transforms.ToTensor(),
                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    train_path = os.path.join('/root', '.local', 'share', 'Cryptomator', 'mnt', 'RBcKw0nRRJns_0', 'Train_Subtype', 'Dataset', img_type)
-    test_path = os.path.join('/root', '.local', 'share', 'Cryptomator', 'mnt', 'RBcKw0nRRJns_0', 'Train_Subtype', 'Dataset', 'Test_{}'.format(img_type))
+    train_path = os.path.join('/root', '.local', 'share', 'Cryptomator', 'mnt', '9ZXBvTYTT7zV_3', 'Train_Subtype', 'Dataset', 'Train_{}'.format(img_type))
+    test_path = os.path.join('/root', '.local', 'share', 'Cryptomator', 'mnt', '9ZXBvTYTT7zV_3', 'Train_Subtype', 'Dataset', 'Test_{}'.format(img_type))
 
     print("TRAIN PATH: ", train_path, "TEST PATH: ", test_path)
     train_dataset = datasets.ImageFolder(train_path, transform)

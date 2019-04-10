@@ -214,20 +214,16 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         
 
         #Cross ID Loss
-        L_zid = torch.mean(torch.abs((D_X(T_YtoX(E_XtoY(images_X))) - images_X)))
-              + torch.mean(torch.abs((D_Y(T_XtoY(E_YtoX(images_Y))) - images_Y)))
+        L_zid = torch.mean(torch.abs((D_X(T_YtoX(E_XtoY(images_X))) - images_X))) + torch.mean(torch.abs((D_Y(T_XtoY(E_YtoX(images_Y))) - images_Y)))
         
         #ID loss
-        L_id = torch.mean(torch.abs(D_X(E_YtoX(images_X)) - images_X))
-             + torch.mean(torch.abs(D_Y(E_XtoY(images_Y)) - images_Y))
+        L_id = torch.mean(torch.abs(D_X(E_YtoX(images_X)) - images_X)) + torch.mean(torch.abs(D_Y(E_XtoY(images_Y)) - images_Y))
         
         #Cross-Translation Consistency Loss
-        L_ctc = torch.mean(torch.abs(T_XtoY(E_YtoX(images_X)) - E_XtoY(images_X)))
-              + torch.mean(torch.abs(T_YtoX(E_XtoY(images_Y)) - E_YtoX(images_Y)))
+        L_ctc = torch.mean(torch.abs(T_XtoY(E_YtoX(images_X)) - E_XtoY(images_X))) + torch.mean(torch.abs(T_YtoX(E_XtoY(images_Y)) - E_YtoX(images_Y)))
             
         #Latent Cycle-Consistency Loss
-        L_zcyc = torch.mean(torch.abs(T_XtoY(T_YtoX(E_YtoX(images_X))) - E_YtoX(images_X)))
-               + torch.mean(torch.abs(T_YtoX(T_XtoY(E_XtoY(images_Y))) - E_XtoY(images_Y)))
+        L_zcyc = torch.mean(torch.abs(T_XtoY(T_YtoX(E_YtoX(images_X))) - E_YtoX(images_X))) + torch.mean(torch.abs(T_YtoX(T_XtoY(E_XtoY(images_Y))) - E_XtoY(images_Y)))
         
         
         #Loss term lambdas
@@ -237,8 +233,7 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         lambda_zid = 6
         lambda_zcyc = 6
         
-        L_tot = lambda_gan * L_gan + lambda_id * L_id + lambda_ctc * L_ctc + lambda_zid * L_zid +
-                lambda_zcyc * L_zcyc
+        L_tot = lambda_gan * L_gan + lambda_id * L_id + lambda_ctc * L_ctc + lambda_zid * L_zid + lambda_zcyc * L_zcyc
         
         
         #compute gradients and update weights
@@ -297,7 +292,7 @@ def create_parser():
 
     # Training hyper-parameters
     parser.add_argument('--train_iters', type=int, default=200000, help='The number of training iterations to run (you can Ctrl-C out earlier if you want).')
-    parser.add_argument('--batch_size', type=int, default=4, help='The number of images in a batch.')
+    parser.add_argument('--batch_size', type=int, default=2, help='The number of images in a batch.')
     parser.add_argument('--num_workers', type=int, default=0, help='The number of threads to use for the DataLoader.')
     parser.add_argument('--lr', type=float, default=0.0003, help='The learning rate (default 0.0003)')
     parser.add_argument('--beta1', type=float, default=0.5)
@@ -305,12 +300,12 @@ def create_parser():
     parser.add_argument('--cycle_consistency_lambda', type=float, default=10.0)
 
     # Data sources
-    parser.add_argument('--X', type=str, default='1.1', choices=['1.1', '1.0'], help='Choose the type of images for domain X.')
-    parser.add_argument('--Y', type=str, default='1.0', choices=['1.1', '1.0'], help='Choose the type of images for domain Y.')
+    parser.add_argument('--X', type=str, default='Siemens', choices=['Siemens', 'GE'], help='Choose the type of images for domain X.')
+    parser.add_argument('--Y', type=str, default='GE', choices=['Siemens', 'GE'], help='Choose the type of images for domain Y.')
 
     # Saving directories and checkpoint/sample iterations
-    parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_cyclegan')
-    parser.add_argument('--sample_dir', type=str, default='samples_cyclegan')
+    parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_xnet')
+    parser.add_argument('--sample_dir', type=str, default='samples_xnet')
     parser.add_argument('--load', type=str, default=None)
     parser.add_argument('--log_step', type=int , default=10)
     parser.add_argument('--sample_every', type=int , default=500)
@@ -322,10 +317,6 @@ def create_parser():
 if __name__ == '__main__':
     parser = create_parser()
     opts = parser.parse_args()
-
-    if opts.use_cycle_consistency_loss:
-        opts.sample_dir = 'cyclegan_samples'
-
 
     print_opts(opts)
     main(opts)
