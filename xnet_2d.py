@@ -196,8 +196,6 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         Q_Y_real_loss = torch.mean((Q_Y(images_Y))**2) 
         Q_Y_fake_loss = torch.mean((Q_Y(D_Y(E_XtoY(images_X))) - 1)**2)
         Q_Y_loss = (Q_Y_real_loss + Q_Y_fake_loss) * .5
-
-        L_gan = Q_X_loss + Q_Y_loss
         
         #compute gradients and update weights
         Q_X_loss.backward()
@@ -211,8 +209,13 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         e_optimizer.zero_grad()
         d_optimizer.zero_grad()
         t_optimizer.zero_grad()
-        
 
+        
+        
+        #GAN Loss
+        #L_gan = Q_X_loss + Q_Y_loss
+        L_gan = 0.5 * (torch.mean((Q_X(images_X))**2) + torch.mean((Q_X(D_X(E_YtoX(images_Y))) - 1)**2) + torch.mean((Q_Y(images_Y))**2) + torch.mean((Q_Y(D_Y(E_XtoY(images_X))) - 1)**2))
+        
         #Cross ID Loss
         L_zid = torch.mean(torch.abs((D_X(T_YtoX(E_XtoY(images_X))) - images_X))) + torch.mean(torch.abs((D_Y(T_XtoY(E_YtoX(images_Y))) - images_Y)))
         
@@ -244,8 +247,8 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
      
         # Print the log info
         if iteration % opts.log_step == 0:
-            print('Iteration [{:5d}/{:5d}] | E_XtoY_loss: {:6.4f} | E_YtoX_loss: {:6.4f} | D_X_loss: {:6.4f} | D_Y_loss: {:6.4f} | T_XtoY_loss: {:6.4f} | T_YtoX_loss: {:6.4f} | Q_X_loss: {:6.4f} | Q_Y_loss: {:6.4f}'
-		   .format(iteration, opts.train_iters, E_XtoY_loss.item(), E_YtoX_loss.item(), D_X_loss.item(), D_Y_loss.item(), T_XtoY_loss.item(), T_YtoX_loss.item(), Q_X_loss.item(), Q_Y_loss.item()))
+            print('Iteration [{:5d}/{:5d}] | L_gan: {:6.4f} | L_zid: {:6.4f} | L_id: {:6.4f} | L_ctc: {:6.4f} | L_zcyc: {:6.4f} | Q_X_loss: {:6.4f} | Q_Y_loss: {:6.4f}'
+		   .format(iteration, opts.train_iters, L_gan.item(), L_zid.item(), L_id.item(), L_ctc.item(), L_zcyc.item(), Q_X_loss.item(), Q_Y_loss.item()))
 
         # Save the generated samples
         if iteration % opts.sample_every == 0:

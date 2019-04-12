@@ -1,0 +1,55 @@
+[I 13:18:36.541 NotebookApp] Writing notebook server cookie secret to /run/user/1002/jupyter/notebook_cookie_secret
+[I 13:18:36.926 NotebookApp] [jupyter_nbextensions_configurator] enabled 0.4.0
+[I 13:18:36.959 NotebookApp] JupyterLab beta preview extension loaded from /home/adithya/anaconda3/envs/mlbook/lib/python3.5/site-packages/jupyterlab
+[I 13:18:36.960 NotebookApp] JupyterLab application directory is /home/adithya/anaconda3/envs/mlbook/share/jupyter/lab
+[I 13:18:36.969 NotebookApp] Serving notebooks from local directory: /home/adithya/Desktop/Adithya/Breast_Style_Transfer/ctyle-transfer
+[I 13:18:36.969 NotebookApp] 0 active kernels
+[I 13:18:36.969 NotebookApp] The Jupyter Notebook is running at:
+[I 13:18:36.969 NotebookApp] http://localhost:8400/?token=9c56d1ba83d70fb8413275b55d8fc0b5f53ff3196f7ce401
+[I 13:18:36.969 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 13:18:36.970 NotebookApp] 
+    
+    Copy/paste this URL into your browser when you connect for the first time,
+    to login with a token:
+        http://localhost:8400/?token=9c56d1ba83d70fb8413275b55d8fc0b5f53ff3196f7ce401&token=9c56d1ba83d70fb8413275b55d8fc0b5f53ff3196f7ce401
+[W 13:19:51.369 NotebookApp] Clearing invalid/expired login cookie username-localhost-8399
+[W 13:19:51.370 NotebookApp] Forbidden
+[W 13:19:51.370 NotebookApp] 403 GET /api/sessions?_=1555087701095 (127.0.0.1) 2.29ms referer=http://localhost:8399/tree/Breast_Style_Transfer/ctyle-transfer
+[W 13:19:51.372 NotebookApp] Clearing invalid/expired login cookie username-localhost-8399
+[W 13:19:51.372 NotebookApp] Forbidden
+[W 13:19:51.372 NotebookApp] 403 GET /api/terminals?_=1555087701096 (127.0.0.1) 0.86ms referer=http://localhost:8399/tree/Breast_Style_Transfer/ctyle-transfer
+[I 13:20:03.177 NotebookApp] 302 GET /?token=9c56d1ba83d70fb8413275b55d8fc0b5f53ff3196f7ce401 (127.0.0.1) 0.89ms
+[W 13:20:33.906 NotebookApp] 404 GET /edit/Breast_Style_Transfer/ctyle-transfer/cycle_gan2d.py (127.0.0.1): File does not exist: Breast_Style_Transfer/ctyle-transfer/cycle_gan2d.py
+[W 13:20:33.913 NotebookApp] 404 GET /edit/Breast_Style_Transfer/ctyle-transfer/cycle_gan2d.py (127.0.0.1) 6.71ms referer=None
+[I 13:21:30.383 NotebookApp] Copying cyclegan_samples/sample-028000-X-cycle_X.png to /cyclegan_samples
+[W 13:21:30.395 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1): Permission denied: cyclegan_samples/sample-028000-X-cycle_X-Copy1.png
+[W 13:21:30.396 NotebookApp] Permission denied: cyclegan_samples/sample-028000-X-cycle_X-Copy1.png
+[W 13:21:30.396 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1) 13.54ms referer=http://localhost:8399/tree/cyclegan_samples
+[I 13:21:30.397 NotebookApp] Copying cyclegan_samples/sample-028000-X-Y.png to /cyclegan_samples
+[W 13:21:30.416 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1): Permission denied: cyclegan_samples/sample-028000-X-Y-Copy1.png
+[W 13:21:30.417 NotebookApp] Permission denied: cyclegan_samples/sample-028000-X-Y-Copy1.png
+[W 13:21:30.417 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1) 20.21ms referer=http://localhost:8399/tree/cyclegan_samples
+[I 13:21:30.418 NotebookApp] Copying cyclegan_samples/sample-028000-Y-cycle_Y.png to /cyclegan_samples
+[W 13:21:30.429 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1): Permission denied: cyclegan_samples/sample-028000-Y-cycle_Y-Copy1.png
+[W 13:21:30.429 NotebookApp] Permission denied: cyclegan_samples/sample-028000-Y-cycle_Y-Copy1.png
+[W 13:21:30.429 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1) 11.91ms referer=http://localhost:8399/tree/cyclegan_samples
+[I 13:21:30.430 NotebookApp] Copying cyclegan_samples/sample-028000-Y-X.png to /cyclegan_samples
+[W 13:21:30.441 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1): Permission denied: cyclegan_samples/sample-028000-Y-X-Copy1.png
+[W 13:21:30.442 NotebookApp] Permission denied: cyclegan_samples/sample-028000-Y-X-Copy1.png
+[W 13:21:30.442 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1) 12.61ms referer=http://localhost:8399/tree/cyclegan_samples
+[I 13:21:30.443 NotebookApp] Copying cyclegan_samples/sample-028500-X-cycle_X.png to /cyclegan_samples
+[W 13:21:30.454 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1): Permission denied: cyclegan_samples/sample-028500-X-cycle_X-Copy1.png
+[W 13:21:30.454 NotebookApp] Permission denied: cyclegan_samples/sample-028500-X-cycle_X-Copy1.png
+[W 13:21:30.454 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1) 12.27ms referer=http://localhost:8399/tree/cyclegan_samples
+[I 13:21:30.456 NotebookApp] Copying cyclegan_samples/sample-028500-X-Y.png to /cyclegan_samples
+[W 13:21:30.466 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1): Permission denied: cyclegan_samples/sample-028500-X-Y-Copy1.png
+[W 13:21:30.466 NotebookApp] Permission denied: cyclegan_samples/sample-028500-X-Y-Copy1.png
+[W 13:21:30.466 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1) 11.59ms referer=http://localhost:8399/tree/cyclegan_samples
+[I 13:21:30.468 NotebookApp] Copying cyclegan_samples/sample-028500-Y-X.png to /cyclegan_samples
+[W 13:21:30.476 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1): Permission denied: cyclegan_samples/sample-028500-Y-X-Copy1.png
+[W 13:21:30.476 NotebookApp] Permission denied: cyclegan_samples/sample-028500-Y-X-Copy1.png
+[W 13:21:30.476 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1) 9.29ms referer=http://localhost:8399/tree/cyclegan_samples
+[I 13:21:30.478 NotebookApp] Copying cyclegan_samples/sample-028500-Y-cycle_Y.png to /cyclegan_samples
+[W 13:21:30.485 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1): Permission denied: cyclegan_samples/sample-028500-Y-cycle_Y-Copy1.png
+[W 13:21:30.485 NotebookApp] Permission denied: cyclegan_samples/sample-028500-Y-cycle_Y-Copy1.png
+[W 13:21:30.486 NotebookApp] 403 POST /api/contents/cyclegan_samples (127.0.0.1) 8.31ms referer=http://localhost:8399/tree/cyclegan_samples

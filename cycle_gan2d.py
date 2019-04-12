@@ -271,8 +271,9 @@ def create_parser():
     parser.add_argument('--cycle_consistency_lambda', type=float, default=10.0)
 
     # Data sources
-    parser.add_argument('--X', type=str, default='1.1', choices=['1.1', '1.0'], help='Choose the type of images for domain X.')
-    parser.add_argument('--Y', type=str, default='1.0', choices=['1.1', '1.0'], help='Choose the type of images for domain Y.')
+    parser.add_argument('--X', type=str, default='Siemens', choices=['Siemens', 'GE'], help='Choose the type of images for domain X.')
+    parser.add_argument('--Y', type=str, default='GE', choices=['Siemens', 'GE'], help='Choose the type of images for domain Y.')
+
 
     # Saving directories and checkpoint/sample iterations
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_cyclegan')
