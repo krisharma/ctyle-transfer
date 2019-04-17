@@ -91,8 +91,9 @@ def checkpoint(iteration, E_XtoY, E_YtoX, D_X, D_Y, T_XtoY, T_YtoX, Q_X, Q_Y, op
 """
 def merge_images(sources, targets, opts, k=10):
     _, _, h, w = sources.shape
-    row = int(np.sqrt(opts.batch_size))
+    row = 2#int(np.sqrt(opts.batch_size))
     merged = np.zeros([3, row*h, row*w*2])
+    print("Ye merged shape: ", merged.shape, "row: ", row)
     for idx, (s, t) in enumerate(zip(sources, targets)):
         i = idx // row
         j = idx % row
@@ -114,6 +115,7 @@ def save_samples(iteration, fixed_Y, fixed_X, E_XtoY, E_YtoX, D_X, D_Y, T_XtoY, 
     X, fake_X, cycle_X = utils.to_data(fixed_X), utils.to_data(fake_X), utils.to_data(cycle_X)
     Y, fake_Y, cycle_Y = utils.to_data(fixed_Y), utils.to_data(fake_Y), utils.to_data(cycle_Y)
 
+    print("X.shape: ", str(X.shape), "\ty.shape: ", str(fake_Y.shape)) 
     merged = merge_images(X, fake_Y, opts)
     path = os.path.join(opts.sample_dir, 'sample-{:06d}-X-Y.png'.format(iteration))
     scipy.misc.imsave(path, merged)

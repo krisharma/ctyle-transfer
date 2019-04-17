@@ -1,7 +1,9 @@
 MRI_Data_2d/
 Saved_Checkpoints_And_Samples/
 checkpoints_cyclegan/
+checkpoints_xnet/
 checkpoints_saved_cyclegan/
 cyclegan_samples/
+xnet_samples/
 test_images/
 
