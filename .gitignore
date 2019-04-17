@@ -4,6 +4,6 @@ checkpoints_cyclegan/
 checkpoints_xnet/
 checkpoints_saved_cyclegan/
 cyclegan_samples/
-xnet_samples/
+samples_xnet/
 test_images/
 
