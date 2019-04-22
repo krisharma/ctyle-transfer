@@ -255,7 +255,7 @@ def print_opts(opts):
 def create_parser():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--image_size', type=int, default=256, help='The side length N to convert images to NxN.')
+    parser.add_argument('--image_size', type=int, default=128, help='The side length N to convert images to NxN.')
     parser.add_argument('--g_conv_dim', type=int, default=256)
     parser.add_argument('--d_conv_dim', type=int, default=256)
     parser.add_argument('--use_cycle_consistency_loss', action='store_true', default=True, help='Choose whether to include the cycle consistency term in the loss.')
@@ -263,7 +263,7 @@ def create_parser():
 
     # Training hyper-parameters
     parser.add_argument('--train_iters', type=int, default=200000, help='The number of training iterations to run (you can Ctrl-C out earlier if you want).')
-    parser.add_argument('--batch_size', type=int, default=4, help='The number of images in a batch.')
+    parser.add_argument('--batch_size', type=int, default=16, help='The number of images in a batch.')
     parser.add_argument('--num_workers', type=int, default=0, help='The number of threads to use for the DataLoader.')
     parser.add_argument('--lr', type=float, default=0.0003, help='The learning rate (default 0.0003)')
     parser.add_argument('--beta1', type=float, default=0.5)
@@ -271,8 +271,8 @@ def create_parser():
     parser.add_argument('--cycle_consistency_lambda', type=float, default=10.0)
 
     # Data sources
-    parser.add_argument('--X', type=str, default='Siemens', choices=['Siemens', 'GE'], help='Choose the type of images for domain X.')
-    parser.add_argument('--Y', type=str, default='GE', choices=['Siemens', 'GE'], help='Choose the type of images for domain Y.')
+    parser.add_argument('--X', type=str, default='A', choices=['A', 'B'], help='Choose the type of images for domain X.')
+    parser.add_argument('--Y', type=str, default='B', choices=['A', 'B'], help='Choose the type of images for domain Y.')
 
 
     # Saving directories and checkpoint/sample iterations

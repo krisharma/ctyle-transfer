@@ -18,8 +18,8 @@ def get_data_loader2d(img_type, opts):
 
     #train_path = os.path.join('/root', '.local', 'share', 'Cryptomator', 'mnt', '9ZXBvTYTT7zV_5', 'Train_Subtype', 'Dataset', 'Train_{}'.format(img_type))
     #test_path = os.path.join('/root', '.local', 'share', 'Cryptomator', 'mnt', '9ZXBvTYTT7zV_5', 'Train_Subtype', 'Dataset', 'Test_{}'.format(img_type))
-    train_path = os.path.join('/home', 'adithya', 'Breast_Style_Transfer', 'horse2zebra',  'train{}'.format(img_type))
-    test_path = os.path.join('/home', 'adithya',  'Breast_Style_Transfer', 'horse2zebra', 'test{}'.format(img_type))
+    train_path = os.path.join('/home', 'adithya', 'MRI_Dataset', 'Train_{}'.format(img_type))
+    test_path = os.path.join('/home', 'adithya',  'MRI_Dataset', 'Test_{}'.format(img_type))
 
 
     print("TRAIN PATH: ", train_path, "TEST PATH: ", test_path)

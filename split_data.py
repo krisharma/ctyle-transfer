@@ -32,18 +32,6 @@ def split_data(dir):
             pre_c.save(os.path.join('./MRI_Data', 'pre_contrast', img, file[:-4] + '.png'))
 
 
-            if not os.path.exists(os.path.join('./MRI_Data', 'flair', img)):
-                os.mkdir(os.path.join('./MRI_Data', 'flair', img))
-
-            flair.save(os.path.join('./MRI_Data', 'flair', img, file[:-4] + '.png'))
-
-
-            if not os.path.exists(os.path.join('./MRI_Data', 'post_contrast', img)):
-                os.mkdir(os.path.join('./MRI_Data', 'post_contrast', img))
-
-            post_c.save(os.path.join('./MRI_Data', 'post_contrast', img, file[:-4] + '.png'))
-
-
 
     for img in test_images:
         slice_files = os.listdir(os.path.join(dir, img))

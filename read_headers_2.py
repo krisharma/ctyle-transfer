@@ -26,8 +26,6 @@ def aggregate_train_and_test_patches(parent_dir):
    
     for sub_dir in test_imgs:
              for patch in os.listdir(os.path.join(parent_dir, sub_dir)):      
-                 #os.rename(os.path.join(parent_dir, sub_dir, 'T1_img', patch), os.path.join(os.path.dirname(parent_dir), 'Dataset', 'Test_'+parent_dir[-3:], 'Test_'+parent_dir[-3:], sub_dir + "_"  +  patch))
-                    
                  os.rename(os.path.join(parent_dir, sub_dir, patch), os.path.join(os.path.dirname(parent_dir), 'Dataset', 'Test' + parent_dir[-3:], 'Test' + parent_dir[-3:], sub_dir + "_"  +  patch))
                 
              print("img done test: ", sub_dir)
@@ -119,12 +117,13 @@ def copy_dir(src, dst):
 
 #DATA ORG Step 1
 #img_path = os.path.join('/root', '.local', 'share', 'Cryptomator', 'mnt', '9ZXBvTYTT7zV_5', 'Train_Subtype', 'pngs')
+
 #csv_path = os.path.join('/home', 'adithya', 'Desktop', 'Adithya', 'Breast_Style_Transfer', 'ctyle-transfer', 'scanner_params.csv')
-#organize_imgs_by_params(img_path, csv_path)
+
+organize_imgs_by_params(img_path, csv_path)
 
 
 #DATA ORG Step 2
-manufacturer_subtype_dir = os.path.join('/root', '.local', 'share', 'Cryptomator', 'mnt', '9ZXBvTYTT7zV_5', 'Train_Subtype', 'Images_GE')
 aggregate_train_and_test_patches(manufacturer_subtype_dir)
 
 

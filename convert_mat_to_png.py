@@ -33,6 +33,14 @@ def convert_mat_to_png(img_dir):
                 os.remove(os.path.join(img_dir, img, sub_img))
                 continue
 
+                
+            #key step --> only take middle 50% of slices in each MRI
+            num_slices = img_array.shape[2]
+            
+            print("og img array shape: ", img_array.shape)
+            img_array = img_array[:, :, num_slices/4: 3*num_slices/4]
+            print("new img array shape: ", img_array.shape)
+            
             for i in range (img_array.shape[2]):
                     imsave(os.path.join(new_sub_img_dir, 'slice_' + str(i) + '.png'), img_array[:,:,i])
 
@@ -42,5 +50,5 @@ def convert_mat_to_png(img_dir):
 
     print "success"
 
-img_path = os.path.join('/root', '.local', 'share', 'Cryptomator', 'mnt', 'RBcKw0nRRJns_0', 'Train_Subtype', 'Images')
-convert_mat_to_png(img_path)
+#img_path = os.path.join('/root', '.local', 'share', 'Cryptomator', 'mnt', 'RBcKw0nRRJns_0', 'Train_Subtype', 'Images')
+#convert_mat_to_png(img_path)
