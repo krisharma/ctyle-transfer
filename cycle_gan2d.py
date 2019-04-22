@@ -49,18 +49,60 @@ def create_model(opts):
     return G_XtoY, G_YtoX, D_X, D_Y
 
 
-"""Saves the parameters of both generators G_YtoX, G_XtoY and discriminators D_X, D_Y."""
-def checkpoint(iteration, G_XtoY, G_YtoX, D_X, D_Y, opts):
+"""Saves the parameters of both generators G_YtoX, G_XtoY and discriminators D_X, D_Y as well as the optimizers"""
+def checkpoint(iteration, G_XtoY, G_YtoX, D_X, D_Y, g_optimizer, dx_optimizer, dy_optimizer, opts):
     G_XtoY_path = os.path.join(opts.checkpoint_dir, 'G_XtoY_' +  str(iteration) + '_.pkl')
     G_YtoX_path = os.path.join(opts.checkpoint_dir, 'G_YtoX_' + str(iteration) + '_.pkl')
     D_X_path = os.path.join(opts.checkpoint_dir, 'D_X_' + str(iteration) + '_.pkl')
     D_Y_path = os.path.join(opts.checkpoint_dir, 'D_Y_' + str(iteration) + '_.pkl')
+
+    g_optimizer_path = os.path.join(opts.checkpoint_dir, 'g_optimizer_' + str(iteration) + '_.pkl')
+    dx_optimizer_path = os.path.join(opts.checkpoint_dir, 'dx_optimizer_' + str(iteration) + '_.pkl')
+    dy_optimizer_path = os.path.join(opts.checkpoint_dir, 'dy_optimizer_' + str(iteration) + '_.pkl')
+
     torch.save(G_XtoY.state_dict(), G_XtoY_path)
     torch.save(G_YtoX.state_dict(), G_YtoX_path)
     torch.save(D_X.state_dict(), D_X_path)
     torch.save(D_Y.state_dict(), D_Y_path)
 
+    torch.save(g_optimizer.state_dict(), g_optimizer_path)
+    torch.save(dx_optimizer.state_dict(), dx_optimizer_path)
+    torch.save(dy_optimizer.state_dict(), dy_optimizer_path)
 
+"Loads generators, discriminators, and optimizers using provided iteration number (initializes them from scratch if provided iteration is 0)"
+def load_checkpoint(opts):
+    #prep all checkpoint directories
+    G_XtoY_path = os.path.join(opts.checkpoint_dir, 'G_XtoY_' +  str(opts.start_iter) + '_.pkl')
+    G_YtoX_path = os.path.join(opts.checkpoint_dir, 'G_YtoX_' + str(opts.start_iter) + '_.pkl')
+    D_X_path = os.path.join(opts.checkpoint_dir, 'D_X_' + str(opts.start_iter) + '_.pkl')
+    D_Y_path = os.path.join(opts.checkpoint_dir, 'D_Y_' + str(opts.start_iter) + '_.pkl')
+
+    g_optimizer_path = os.path.join(opts.checkpoint_dir, 'g_optimizer_' + str(opts.start_iter) + '_.pkl')
+    dx_optimizer_path = os.path.join(opts.checkpoint_dir, 'dx_optimizer_' + str(opts.start_iter) + '_.pkl')
+    dy_optimizer_path = os.path.join(opts.checkpoint_dir, 'dy_optimizer_' + str(opts.start_iter) + '_.pkl')
+
+    #initialize models either from scratch or using checkpoints from specified iteration
+    G_XtoY, G_YtoX, D_X, D_Y = create_model(opts)
+
+    g_params = itertools.chain(G_XtoY.parameters(), G_YtoX.parameters()) # Get generator parameters
+    dx_params = D_X.parameters()   #Get discriminator parameters
+    dy_params = D_Y.parameters()   #Get discriminator parameters
+
+    g_optimizer = optim.Adam(g_params, opts.lr, [opts.beta1, opts.beta2])
+    dx_optimizer = optim.Adam(dx_params, opts.lr, [opts.beta1, opts.beta2])
+    dy_optimizer = optim.Adam(dy_params, opts.lr, [opts.beta1, opts.beta2])
+
+    if(iteration > 0):
+        G_XtoY.load_state_dict(torch.load(G_XtoY_path, map_location=lambda storage, loc: storage))
+        G_YtoX.load_state_dict(torch.load(G_YtoX_path, map_location=lambda storage, loc: storage))
+        D_X.load_state_dict(torch.load(D_X_path, map_location=lambda storage, loc: storage))
+        D_Y.load_state_dict(torch.load(D_Y_path, map_location=lambda storage, loc: storage))
+
+        g_optimizer.load_state_dict(torch.load(g_optimizer_path, map_location=lambda storage, loc: storage))
+        dx_optimizer.load_state_dict(torch.load(dx_optimizer_path, map_location=lambda storage, loc: storage))
+        dy_optimizer.load_state_dict(torch.load(dy_optimizer_path, map_location=lambda storage, loc: storage))
+
+    return G_XtoY, G_YtoX, D_X_, D_Y, g_optimizer, dx_optimizer, dy_optimizer
 
 """Creates a grid for sampling GAN results. Consist of pairs of columns,
    where the first column in each pair contains images source images and
@@ -85,7 +127,7 @@ def merge_images(sources, targets, opts, k=10):
 def save_samples(iteration, fixed_Y, fixed_X, G_YtoX, G_XtoY, opts):
     fake_X = G_YtoX(fixed_Y)
     fake_Y = G_XtoY(fixed_X)
-    
+
     cycle_X = G_YtoX(fake_Y)
     cycle_Y = G_XtoY(fake_X)
 
@@ -101,7 +143,7 @@ def save_samples(iteration, fixed_Y, fixed_X, G_YtoX, G_XtoY, opts):
     path = os.path.join(opts.sample_dir, 'sample-{:06d}-Y-X.png'.format(iteration))
     scipy.misc.imsave(path, merged)
     print('Saved {}'.format(path))
-    
+
     merged = merge_images(X, cycle_X, opts)
     path = os.path.join(opts.sample_dir, 'sample-{:06d}-X-cycle_X.png'.format(iteration))
     scipy.misc.imsave(path, merged)
@@ -118,17 +160,9 @@ def save_samples(iteration, fixed_Y, fixed_X, G_YtoX, G_XtoY, opts):
         2. Saves generated samples every opts.sample_every iterations
 """
 def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader_Y, opts):
-    # Create generators and discriminators
-    G_XtoY, G_YtoX, D_X, D_Y = create_model(opts)
 
-    g_params = itertools.chain(G_XtoY.parameters(), G_YtoX.parameters()) # Get generator parameters
-    dx_params = D_X.parameters()   #Get discriminator parameters
-    dy_params = D_Y.parameters()   #Get discriminator parameters
-
-    # Create optimizers for the generators and discriminators
-    g_optimizer = optim.Adam(g_params, opts.lr, [opts.beta1, opts.beta2])
-    dx_optimizer = optim.Adam(dx_params, opts.lr, [opts.beta1, opts.beta2])
-    dy_optimizer = optim.Adam(dy_params, opts.lr, [opts.beta1, opts.beta2])
+    #Initialize generators, discriminators, and optimizers
+    G_XtoY, G_YtoX, D_X_, D_Y, g_optimizer, dx_optimizer, dy_optimizer = load_checkpoint(opts)
 
     iter_X = iter(dataloader_X)
     iter_Y = iter(dataloader_Y)
@@ -160,11 +194,11 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 
         # 1. Compute the discriminator x loss
         dx_optimizer.zero_grad()
-                
+
         #Real loss
         D_X_real_loss = torch.mean((D_X(images_X))**2) #D_X_real_loss = torch.mean((D_X(images_X)-1)**2)
         fake_X = G_YtoX(images_Y)
-        
+
         #Fake loss
         D_X_fake_loss = torch.mean((D_X(fake_X) - 1)**2) #D_X_fake_loss = torch.mean((D_X(fake_X))**2)
         D_X_loss = (D_X_real_loss + D_X_fake_loss) * .5
@@ -174,11 +208,11 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 
         #2. Compute the discriminator y loss
         dy_optimizer.zero_grad()
-        
+
         #Real loss
-        D_Y_real_loss = torch.mean((D_Y(images_Y))**2) #D_Y_real_loss = torch.mean((D_Y(images_Y)-1)**2) 
+        D_Y_real_loss = torch.mean((D_Y(images_Y))**2) #D_Y_real_loss = torch.mean((D_Y(images_Y)-1)**2)
         fake_Y = G_XtoY(images_X)
-        
+
         #Fake loss
         D_Y_fake_loss = torch.mean((D_Y(fake_Y) - 1)**2) #D_Y_fake_loss = torch.mean((D_Y(fake_Y))**2)
         D_Y_loss = (D_Y_real_loss + D_Y_fake_loss) * .5
@@ -188,7 +222,7 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 
         #### GENERATOR TRAINING #### (changed so real = 0, generated = 1)
         g_optimizer.zero_grad()
-        
+
         # 1. Generate fake images that look like domain X based on real images in domain Y
         fake_X = G_YtoX(images_Y)
         # 2. Compute the generator loss based on domain X
@@ -223,7 +257,7 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 
         # Save the model parameters
         if iteration % opts.checkpoint_every == 0:
-            checkpoint(iteration, G_XtoY, G_YtoX, D_X, D_Y, opts)
+            checkpoint(iteration, G_XtoY, G_YtoX, D_X, D_Y, g_optimizer, dx_optimizer, dy_optimizer, opts)
 
 
 """Loads the data, creates checkpoint and sample directories, and starts the training loop."""
@@ -282,6 +316,7 @@ def create_parser():
     parser.add_argument('--log_step', type=int , default=10)
     parser.add_argument('--sample_every', type=int , default=500)
     parser.add_argument('--checkpoint_every', type=int , default=1000)
+    parser.add_argument('--start_iter', type=int, default=0)
 
     return parser
 
