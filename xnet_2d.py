@@ -183,36 +183,6 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         images_Y, labels_Y = iter_Y.next()
         images_Y, labels_Y = utils.to_var(images_Y), utils.to_var(labels_Y).long().squeeze()
 
-        #######################
-        #Update discriminators#
-        #######################
-        
-        #Zero out discriminator optimizer
-        q_optimizer.zero_grad()
-                
-        #Compute discriminator losses
-        Q_X_real_loss = torch.mean((Q_X(images_X))**2) 
-        Q_X_fake_loss = torch.mean((Q_X(D_X(E_YtoX(images_Y))) - 1)**2)
-        Q_X_loss = (Q_X_real_loss + Q_X_fake_loss) * .5
-
-        Q_Y_real_loss = torch.mean((Q_Y(images_Y))**2) 
-        Q_Y_fake_loss = torch.mean((Q_Y(D_Y(E_XtoY(images_X))) - 1)**2)
-        Q_Y_loss = (Q_Y_real_loss + Q_Y_fake_loss) * .5
-        
-        #compute gradients and update weights
-        Q_X_loss.backward()
-        Q_Y_loss.backward()
-        q_optimizer.step()
-       
-      
-        ###########################
-        #Update all other networks#
-        ###########################
-        e_optimizer.zero_grad()
-        d_optimizer.zero_grad()
-        t_optimizer.zero_grad()
-
-        
         
         #GAN Loss
         #L_gan = Q_X_loss + Q_Y_loss
@@ -247,6 +217,31 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         d_optimizer.zero_grad()
         t_optimizer.zero_grad()
      
+        
+        
+        
+        #######################
+        #Update discriminators#
+        #######################
+        
+        #Zero out discriminator optimizer
+        q_optimizer.zero_grad()
+                
+        #Compute discriminator losses
+        Q_X_real_loss = torch.mean((Q_X(images_X))**2) 
+        Q_X_fake_loss = torch.mean((Q_X(D_X(E_YtoX(images_Y))) - 1)**2)
+        Q_X_loss = (Q_X_real_loss + Q_X_fake_loss) * .5
+
+        Q_Y_real_loss = torch.mean((Q_Y(images_Y))**2) 
+        Q_Y_fake_loss = torch.mean((Q_Y(D_Y(E_XtoY(images_X))) - 1)**2)
+        Q_Y_loss = (Q_Y_real_loss + Q_Y_fake_loss) * .5
+        
+        #compute gradients and update weights
+        Q_X_loss.backward()
+        Q_Y_loss.backward()
+        q_optimizer.step()
+       
+      
         # Print the log info
         if iteration % opts.log_step == 0:
             print('Iteration [{:5d}/{:5d}] | L_gan: {:6.4f} | L_zid: {:6.4f} | L_id: {:6.4f} | L_ctc: {:6.4f} | L_zcyc: {:6.4f} | Q_X_loss: {:6.4f} | Q_Y_loss: {:6.4f}'

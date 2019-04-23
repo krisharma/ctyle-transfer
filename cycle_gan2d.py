@@ -92,7 +92,7 @@ def load_checkpoint(opts):
     dx_optimizer = optim.Adam(dx_params, opts.lr, [opts.beta1, opts.beta2])
     dy_optimizer = optim.Adam(dy_params, opts.lr, [opts.beta1, opts.beta2])
 
-    if(iteration > 0):
+    if(opts.start_iter > 0):
         G_XtoY.load_state_dict(torch.load(G_XtoY_path, map_location=lambda storage, loc: storage))
         G_YtoX.load_state_dict(torch.load(G_YtoX_path, map_location=lambda storage, loc: storage))
         D_X.load_state_dict(torch.load(D_X_path, map_location=lambda storage, loc: storage))
@@ -102,7 +102,7 @@ def load_checkpoint(opts):
         dx_optimizer.load_state_dict(torch.load(dx_optimizer_path, map_location=lambda storage, loc: storage))
         dy_optimizer.load_state_dict(torch.load(dy_optimizer_path, map_location=lambda storage, loc: storage))
 
-    return G_XtoY, G_YtoX, D_X_, D_Y, g_optimizer, dx_optimizer, dy_optimizer
+    return G_XtoY, G_YtoX, D_X, D_Y, g_optimizer, dx_optimizer, dy_optimizer
 
 """Creates a grid for sampling GAN results. Consist of pairs of columns,
    where the first column in each pair contains images source images and
@@ -111,13 +111,15 @@ def load_checkpoint(opts):
 """
 def merge_images(sources, targets, opts, k=10):
     _, _, h, w = sources.shape
-    row = int(np.sqrt(opts.batch_size))
+    row = 2#int(np.sqrt(opts.batch_size))
     merged = np.zeros([3, row*h, row*w*2])
     for idx, (s, t) in enumerate(zip(sources, targets)):
         i = idx // row
         j = idx % row
 
         print("I: ", i, "H: ", h, "J: ", j)
+        if(i * h >= merged.shape[1] or j * 2 * h >= merged.shape[2]):
+            break
         merged[:, i*h:(i+1)*h, (j*2)*h:(j*2+1)*h] = s
         merged[:, i*h:(i+1)*h, (j*2+1)*h:(j*2+2)*h] = t
     return merged.transpose(1, 2, 0)
@@ -160,9 +162,8 @@ def save_samples(iteration, fixed_Y, fixed_X, G_YtoX, G_XtoY, opts):
         2. Saves generated samples every opts.sample_every iterations
 """
 def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader_Y, opts):
-
     #Initialize generators, discriminators, and optimizers
-    G_XtoY, G_YtoX, D_X_, D_Y, g_optimizer, dx_optimizer, dy_optimizer = load_checkpoint(opts)
+    G_XtoY, G_YtoX, D_X, D_Y, g_optimizer, dx_optimizer, dy_optimizer = load_checkpoint(opts)
 
     iter_X = iter(dataloader_X)
     iter_Y = iter(dataloader_Y)
@@ -189,18 +190,44 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         images_Y, labels_Y = iter_Y.next()
         images_Y, labels_Y = utils.to_var(images_Y), utils.to_var(labels_Y).long().squeeze()
 
+        
+        #### GENERATOR TRAINING #### (changed so real = 0, generated = 1)
+        g_optimizer.zero_grad()
 
+        # 1. GAN loss term
+        fake_X = G_YtoX(images_Y)
+        fake_Y = G_XtoY(images_X)
+        
+        gan_loss = torch.mean((D_X(fake_X)**2)) + torch.mean((D_Y(fake_Y)**2)) 
+
+        #2. Identity loss term
+        identity_X = G_YtoX(images_X)
+        identity_Y = G_XtoY(images_Y)
+        
+        identity_loss = torch.mean(torch.abs(images_X - identity_X)) + torch.mean(torch.abs(images_Y-identity_Y))
+    
+        #3. Cycle consistency loss term
+        reconstructed_Y = G_XtoY(fake_X)
+        reconstructed_X = G_YtoX(fake_Y)
+        
+        cycle_consistency_loss = torch.mean(torch.abs(images_Y-reconstructed_Y)) + torch.mean(torch.abs(images_X-reconstructed_X))
+
+        
+        #Final GAN Loss Term
+        g_loss = gan_loss + opts.identity_lambda * identity_loss + opts.cycle_consistency_lambda * cycle_consistency_loss
+       
+        g_loss.backward()
+        g_optimizer.step()
+
+        
         #### DISCRIMINATOR TRAINING #### (changed so real = 0, generated = 1)
 
         # 1. Compute the discriminator x loss
         dx_optimizer.zero_grad()
 
-        #Real loss
-        D_X_real_loss = torch.mean((D_X(images_X))**2) #D_X_real_loss = torch.mean((D_X(images_X)-1)**2)
+        D_X_real_loss = torch.mean((D_X(images_X))**2) #Real loss
         fake_X = G_YtoX(images_Y)
-
-        #Fake loss
-        D_X_fake_loss = torch.mean((D_X(fake_X) - 1)**2) #D_X_fake_loss = torch.mean((D_X(fake_X))**2)
+        D_X_fake_loss = torch.mean((D_X(fake_X) - 1)**2) #Fake loss
         D_X_loss = (D_X_real_loss + D_X_fake_loss) * .5
 
         D_X_loss.backward()
@@ -209,43 +236,15 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         #2. Compute the discriminator y loss
         dy_optimizer.zero_grad()
 
-        #Real loss
-        D_Y_real_loss = torch.mean((D_Y(images_Y))**2) #D_Y_real_loss = torch.mean((D_Y(images_Y)-1)**2)
+        D_Y_real_loss = torch.mean((D_Y(images_Y))**2) #Real loss
         fake_Y = G_XtoY(images_X)
-
-        #Fake loss
-        D_Y_fake_loss = torch.mean((D_Y(fake_Y) - 1)**2) #D_Y_fake_loss = torch.mean((D_Y(fake_Y))**2)
+        D_Y_fake_loss = torch.mean((D_Y(fake_Y) - 1)**2) #Fake loss
         D_Y_loss = (D_Y_real_loss + D_Y_fake_loss) * .5
 
         D_Y_loss.backward()
         dy_optimizer.step()
 
-        #### GENERATOR TRAINING #### (changed so real = 0, generated = 1)
-        g_optimizer.zero_grad()
-
-        # 1. Generate fake images that look like domain X based on real images in domain Y
-        fake_X = G_YtoX(images_Y)
-        # 2. Compute the generator loss based on domain X
-        g_loss = torch.mean((D_X(fake_X)**2)) #g_loss = torch.mean((D_X(fake_X)-1)**2)
-
-        #cycle consistency loss for G_XtoY (add lambda?)
-        reconstructed_Y = G_XtoY(fake_X)
-        cycle_consistency_loss = torch.mean(torch.abs(images_Y-reconstructed_Y)) #replaced L2 with L1
-        g_loss += opts.cycle_consistency_lambda * cycle_consistency_loss
-
-        # 1. Generate fake images that look like domain Y based on real images in domain X
-        fake_Y = G_XtoY(images_X)
-        # 2. Compute the generator loss based on domain Y
-        g_loss += torch.mean((D_Y(fake_Y)**2)) #g_loss += torch.mean((D_Y(fake_Y)-1)**2)
-
-        #cycle consistency loss for G_YtoX (add lambda?)
-        reconstructed_X = G_YtoX(fake_Y)
-        cycle_consistency_loss = torch.mean(torch.abs(images_X-reconstructed_X)) #replaced L2 with L1
-        g_loss += opts.cycle_consistency_lambda * cycle_consistency_loss
-
-        g_loss.backward()
-        g_optimizer.step()
-
+     
         # Print the log info
         if iteration % opts.log_step == 0:
             print('Iteration [{:5d}/{:5d}] | d_Y_loss: {:6.4f} | d_X_loss: {:6.4f} | g_loss: {:6.4f}'
@@ -257,8 +256,7 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 
         # Save the model parameters
         if iteration % opts.checkpoint_every == 0:
-            checkpoint(iteration, G_XtoY, G_YtoX, D_X, D_Y, g_optimizer, dx_optimizer, dy_optimizer, opts)
-
+            checkpoint(iteration, G_XtoY, G_YtoX, D_X, D_Y, opts)
 
 """Loads the data, creates checkpoint and sample directories, and starts the training loop."""
 def main(opts):
@@ -297,13 +295,14 @@ def create_parser():
 
     # Training hyper-parameters
     parser.add_argument('--train_iters', type=int, default=200000, help='The number of training iterations to run (you can Ctrl-C out earlier if you want).')
-    parser.add_argument('--batch_size', type=int, default=16, help='The number of images in a batch.')
+    parser.add_argument('--batch_size', type=int, default=8, help='The number of images in a batch.')
     parser.add_argument('--num_workers', type=int, default=0, help='The number of threads to use for the DataLoader.')
     parser.add_argument('--lr', type=float, default=0.0003, help='The learning rate (default 0.0003)')
     parser.add_argument('--beta1', type=float, default=0.5)
     parser.add_argument('--beta2', type=float, default=0.999)
     parser.add_argument('--cycle_consistency_lambda', type=float, default=10.0)
-
+    parser.add_argument('--identity_lambda', type=float, default=5.0)
+    
     # Data sources
     parser.add_argument('--X', type=str, default='A', choices=['A', 'B'], help='Choose the type of images for domain X.')
     parser.add_argument('--Y', type=str, default='B', choices=['A', 'B'], help='Choose the type of images for domain Y.')
