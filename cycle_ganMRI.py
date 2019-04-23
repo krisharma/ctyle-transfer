@@ -256,7 +256,7 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 
         # Save the model parameters
         if iteration % opts.checkpoint_every == 0:
-            checkpoint(iteration, G_XtoY, G_YtoX, D_X, D_Y, opts)
+            checkpoint(iteration, G_XtoY, G_YtoX, D_X, D_Y, g_optimizer, dx_optimizer, dy_optimizer, opts)
 
 
 """Loads the data, creates checkpoint and sample directories, and starts the training loop."""
@@ -315,7 +315,7 @@ def create_parser():
     parser.add_argument('--load', type=str, default=None)
     parser.add_argument('--log_step', type=int , default=10)
     parser.add_argument('--sample_every', type=int , default=500)
-    parser.add_argument('--checkpoint_every', type=int , default=1000)
+    parser.add_argument('--checkpoint_every', type=int , default=500)
     parser.add_argument('--start_iter', type=int, default=0)
 
     return parser
