@@ -190,44 +190,44 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         images_Y, labels_Y = iter_Y.next()
         images_Y, labels_Y = utils.to_var(images_Y), utils.to_var(labels_Y).long().squeeze()
 
-        
+
         #### GENERATOR TRAINING #### (changed so real = 0, generated = 1)
         g_optimizer.zero_grad()
 
         # 1. GAN loss term
         fake_X = G_YtoX(images_Y)
         fake_Y = G_XtoY(images_X)
-        
-        gan_loss = torch.mean((D_X(fake_X)**2)) + torch.mean((D_Y(fake_Y)**2)) 
+
+        gan_loss = torch.mean(((D_X(fake_X)-1)**2)) + torch.mean(((D_Y(fake_Y)-1)**2))
 
         #2. Identity loss term
         identity_X = G_YtoX(images_X)
         identity_Y = G_XtoY(images_Y)
-        
+
         identity_loss = torch.mean(torch.abs(images_X - identity_X)) + torch.mean(torch.abs(images_Y-identity_Y))
-    
+
         #3. Cycle consistency loss term
         reconstructed_Y = G_XtoY(fake_X)
         reconstructed_X = G_YtoX(fake_Y)
-        
+
         cycle_consistency_loss = torch.mean(torch.abs(images_Y-reconstructed_Y)) + torch.mean(torch.abs(images_X-reconstructed_X))
 
-        
+
         #Final GAN Loss Term
         g_loss = gan_loss + opts.identity_lambda * identity_loss + opts.cycle_consistency_lambda * cycle_consistency_loss
-       
+
         g_loss.backward()
         g_optimizer.step()
 
-        
+
         #### DISCRIMINATOR TRAINING #### (changed so real = 0, generated = 1)
 
         # 1. Compute the discriminator x loss
         dx_optimizer.zero_grad()
 
-        D_X_real_loss = torch.mean((D_X(images_X))**2) #Real loss
+        D_X_real_loss = torch.mean((D_X(images_X)-1)**2) #Real loss
         fake_X = G_YtoX(images_Y)
-        D_X_fake_loss = torch.mean((D_X(fake_X) - 1)**2) #Fake loss
+        D_X_fake_loss = torch.mean((D_X(fake_X))**2) #Fake loss
         D_X_loss = (D_X_real_loss + D_X_fake_loss) * .5
 
         D_X_loss.backward()
@@ -236,21 +236,21 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         #2. Compute the discriminator y loss
         dy_optimizer.zero_grad()
 
-        D_Y_real_loss = torch.mean((D_Y(images_Y))**2) #Real loss
+        D_Y_real_loss = torch.mean((D_Y(images_Y)-1)**2) #Real loss
         fake_Y = G_XtoY(images_X)
-        D_Y_fake_loss = torch.mean((D_Y(fake_Y) - 1)**2) #Fake loss
+        D_Y_fake_loss = torch.mean((D_Y(fake_Y))**2) #Fake loss
         D_Y_loss = (D_Y_real_loss + D_Y_fake_loss) * .5
 
         D_Y_loss.backward()
         dy_optimizer.step()
 
-     
+
         # Print the log info
         if iteration % opts.log_step == 0:
             print('Iteration [{:5d}/{:5d}] | d_Y_loss: {:6.4f} | d_X_loss: {:6.4f} | g_loss: {:6.4f}'
 		   .format(iteration, opts.train_iters, D_Y_loss.item(), D_X_loss.item(),  g_loss.item()))
 
-        # Save the generated samples 
+        # Save the generated samples
         if iteration % opts.sample_every == 0:
             save_samples(iteration, fixed_Y, fixed_X, G_YtoX, G_XtoY, opts)
 
@@ -302,7 +302,7 @@ def create_parser():
     parser.add_argument('--beta2', type=float, default=0.999)
     parser.add_argument('--cycle_consistency_lambda', type=float, default=10.0)
     parser.add_argument('--identity_lambda', type=float, default=5.0)
-    
+
     # Data sources
     parser.add_argument('--X', type=str, default='A', choices=['A', 'B'], help='Choose the type of images for domain X.')
     parser.add_argument('--Y', type=str, default='B', choices=['A', 'B'], help='Choose the type of images for domain Y.')
