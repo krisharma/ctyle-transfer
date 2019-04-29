@@ -1,8 +1,4 @@
-import os
-import pdb
-import pickle
-import argparse
-import itertools
+import os, util, pdb, pickle, argparse, itertools
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -11,6 +7,8 @@ warnings.filterwarnings("ignore")
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.autograd import Variable
+from torchvision import transforms
 
 # Numpy & Scipy imports
 import numpy as np
@@ -21,7 +19,7 @@ import scipy.misc
 import utils
 from data_loaderMRI import get_data_loader2d
 from models import CycleGenerator2d, PatchGANDiscriminator2d
-from torchvision import transforms
+
 
 SEED = 14
 
@@ -162,6 +160,7 @@ def save_samples(iteration, fixed_Y, fixed_X, G_YtoX, G_XtoY, opts):
         2. Saves generated samples every opts.sample_every iterations
 """
 def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader_Y, opts):
+          
     #Initialize generators, discriminators, and optimizers
     G_XtoY, G_YtoX, D_X, D_Y, g_optimizer, dx_optimizer, dy_optimizer = load_checkpoint(opts)
 
@@ -171,13 +170,21 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
     test_iter_X = iter(test_dataloader_X)
     test_iter_Y = iter(test_dataloader_Y)
 
-    # Set fixed data from domains X and Y for sampling. These are images that are held
-    # constant throughout training, that allow us to inspect the model's performance.
+    # Set fixed data from domains X and Y for sampling. These are images that are held constant throughout training, that allow us to inspect the model's performance.
     fixed_X = utils.to_var(test_iter_X.next()[0])
     fixed_Y = utils.to_var(test_iter_Y.next()[0])
 
     iter_per_epoch = min(len(iter_X), len(iter_Y))
 
+ 
+    # loss terms
+    MSE_loss = nn.MSELoss().cuda()
+    L1_loss = nn.L1Loss().cuda()
+    
+    # image store (used to stabilize discriminator training)
+    fake_X_store = util.ImagePool(50)
+    fake_Y_store = util.ImagePool(50)
+   
     for iteration in range(1, opts.train_iters+1):
         # Reset data_iter for each epoch
         if iteration % iter_per_epoch == 0:
@@ -189,30 +196,33 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 
         images_Y, labels_Y = iter_Y.next()
         images_Y, labels_Y = utils.to_var(images_Y), utils.to_var(labels_Y).long().squeeze()
-
-
-        #### GENERATOR TRAINING #### (changed so real = 0, generated = 1)
+        
+        #### GENERATOR TRAINING ####
         g_optimizer.zero_grad()
 
         # 1. GAN loss term
         fake_X = G_YtoX(images_Y)
         fake_Y = G_XtoY(images_X)
+        
+        d_x_pred = D_X(fake_X)
+        d_y_pred = D_Y(fake_Y)
 
-        gan_loss = torch.mean(((D_X(fake_X)-1)**2)) + torch.mean(((D_Y(fake_Y)-1)**2))
-
+        #want d_x_pred to be as close to 1(real) as possible
+        gan_loss = MSE_loss(d_x_pred, Variable(torch.ones(d_x_pred.size()).cuda())) + MSE_loss(d_y_pred, Variable(torch.ones(d_y_pred.size()).cuda()))
+        
+                            
         #2. Identity loss term
         identity_X = G_YtoX(images_X)
         identity_Y = G_XtoY(images_Y)
 
-        identity_loss = torch.mean(torch.abs(images_X - identity_X)) + torch.mean(torch.abs(images_Y-identity_Y))
+        identity_loss = L1_loss(images_X, identity_X) + L1_loss(images_Y, identity_Y) 
 
         #3. Cycle consistency loss term
         reconstructed_Y = G_XtoY(fake_X)
         reconstructed_X = G_YtoX(fake_Y)
 
-        cycle_consistency_loss = torch.mean(torch.abs(images_Y-reconstructed_Y)) + torch.mean(torch.abs(images_X-reconstructed_X))
-
-
+        cycle_consistency_loss = L1_loss(images_X, reconstructed_X) + L1_loss(images_Y, reconstructed_Y) 
+                            
         #Final GAN Loss Term
         g_loss = gan_loss + opts.identity_lambda * identity_loss + opts.cycle_consistency_lambda * cycle_consistency_loss
 
@@ -220,31 +230,36 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         g_optimizer.step()
 
 
-        #### DISCRIMINATOR TRAINING #### (changed so real = 0, generated = 1)
-
+        #### DISCRIMINATOR TRAINING ####
+                            
         # 1. Compute the discriminator x loss
         dx_optimizer.zero_grad()
 
-        D_X_real_loss = torch.mean((D_X(images_X)-1)**2) #Real loss
-        fake_X = G_YtoX(images_Y)
-        D_X_fake_loss = torch.mean((D_X(fake_X))**2) #Fake loss
+        d_x_pred = D_X(images_X)
+        D_X_real_loss = MSE_loss(d_x_pred, Variable(torch.ones(d_x_pred.size()).cuda())) 
+        
+        fake_X = fake_X_store.query(fake_X)
+        d_x_pred = D_X(fake_X)
+        D_X_fake_loss = MSE_loss(d_x_pred, Variable(torch.zeros(d_x_pred.size()).cuda()))
+                       
         D_X_loss = (D_X_real_loss + D_X_fake_loss) * .5
-
         D_X_loss.backward()
         dx_optimizer.step()
 
         #2. Compute the discriminator y loss
         dy_optimizer.zero_grad()
 
-        D_Y_real_loss = torch.mean((D_Y(images_Y)-1)**2) #Real loss
-        fake_Y = G_XtoY(images_X)
-        D_Y_fake_loss = torch.mean((D_Y(fake_Y))**2) #Fake loss
+        d_y_pred = D_X(images_Y)
+        D_Y_real_loss = MSE_loss(d_y_pred, Variable(torch.ones(d_y_pred.size()).cuda())) 
+        
+        fake_Y = fake_Y_store.query(fake_Y)
+        d_y_pred = D_Y(fake_Y)
+        D_Y_fake_loss = MSE_loss(d_y_pred, Variable(torch.zeros(d_y_pred.size()).cuda()))
+                       
         D_Y_loss = (D_Y_real_loss + D_Y_fake_loss) * .5
-
         D_Y_loss.backward()
         dy_optimizer.step()
-
-
+                                                    
         # Print the log info
         if iteration % opts.log_step == 0:
             print('Iteration [{:5d}/{:5d}] | d_Y_loss: {:6.4f} | d_X_loss: {:6.4f} | g_loss: {:6.4f}'
@@ -287,7 +302,7 @@ def print_opts(opts):
 def create_parser():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--image_size', type=int, default=128, help='The side length N to convert images to NxN.')
+    parser.add_argument('--image_size', type=int, default=256, help='The side length N to convert images to NxN.')
     parser.add_argument('--g_conv_dim', type=int, default=256)
     parser.add_argument('--d_conv_dim', type=int, default=256)
     parser.add_argument('--use_cycle_consistency_loss', action='store_true', default=True, help='Choose whether to include the cycle consistency term in the loss.')
@@ -295,7 +310,7 @@ def create_parser():
 
     # Training hyper-parameters
     parser.add_argument('--train_iters', type=int, default=200000, help='The number of training iterations to run (you can Ctrl-C out earlier if you want).')
-    parser.add_argument('--batch_size', type=int, default=16, help='The number of images in a batch.')
+    parser.add_argument('--batch_size', type=int, default=4, help='The number of images in a batch.')
     parser.add_argument('--num_workers', type=int, default=0, help='The number of threads to use for the DataLoader.')
     parser.add_argument('--lr', type=float, default=0.0003, help='The learning rate (default 0.0003)')
     parser.add_argument('--beta1', type=float, default=0.5)

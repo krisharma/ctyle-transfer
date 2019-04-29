@@ -9,6 +9,7 @@ from PIL import Image
 from distutils.dir_util import copy_tree
 from scipy.io import loadmat
 from scipy.misc import imsave
+from shutil import copyfile
 import random
 import cv2
 
@@ -40,6 +41,9 @@ def convert_mat_to_png(mat_dir, dataset_dir, param_csv, param_prefs_dict):
             ge_img_list.append(img)
         else:
             siemens_img_list.append(img)
+
+
+    random.seed(14) #set random seed to ensure same outputs every time
 
     random.shuffle(ge_img_list)
     ge_train_list = ge_img_list[:int(3*len(ge_img_list)/4)]
@@ -89,6 +93,19 @@ def flip_images(dir):
         imsave(os.path.join(dir, image), flipped)
 
 
+
+
+def copy_mat_files(src_dir, dest_dir):
+    img_list = os.listdir(src_dir)
+    img_list = [img[:22] for img in img_list]
+    img_list = list(dict.fromkeys(img_list))
+    
+    mat_dir = os.path.join('/home', 'adithya', 'Train_Subtype', 'Images')
+    for img in img_list:
+        copyfile(os.path.join(mat_dir, img, 'pre_img.mat'), os.path.join(dest_dir, img + '.mat'))
+        print("Copied: ", img)
+    #/home/adithya/Train_Subtype/Images/BRCA_DUKE_INVA01_27492
+
 #mat_dir = os.path.join('/home', 'adithya', 'Train_Subtype', 'Images')
 #dataset_dir = os.path.join('/home', 'adithya', 'MRI_Dataset')
 #param_csv = os.path.join('/home', 'adithya', 'Breast_Style_Transfer', 'ctyle-transfer', 'scanner_params.csv')
@@ -97,4 +114,7 @@ def flip_images(dir):
 #convert_mat_to_png(mat_dir, dataset_dir, param_csv, param_dict)
 
 
-flip_images(os.path.join('/home', 'adithya', 'MRI_Dataset', 'Test_Siemens', 'Test_Siemens'))
+#flip_images(os.path.join('/home', 'adithya', 'MRI_Dataset', 'Test_Siemens', 'Test_Siemens'))
+copy_mat_files(os.path.join('/home', 'adithya', 'MRI_Dataset', 'Train_GE', 'Train_GE'), os.path.join('/home', 'adithya', 'Training_Set_Mat_Files'))
+copy_mat_files(os.path.join('/home', 'adithya', 'MRI_Dataset', 'Train_Siemens', 'Train_Siemens'), os.path.join('/home', 'adithya', 'Training_Set_Mat_Files'))
+
