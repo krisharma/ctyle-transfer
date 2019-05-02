@@ -55,10 +55,26 @@ def convert_mat_to_png(mat_dir, dataset_dir, param_csv, param_prefs_dict):
     siemens_test_list = siemens_img_list[int(3*len(siemens_img_list)/4):]
 
     print(len(ge_train_list), len(ge_test_list), len(siemens_train_list), len(siemens_test_list))
-    #aggregate_and_save_slices(mat_dir, dataset_dir, ge_train_list, 'Train_GE')
-    #aggregate_and_save_slices(mat_dir, dataset_dir, ge_test_list, 'Test_GE')
-    #aggregate_and_save_slices(mat_dir, dataset_dir, siemens_train_list, 'Train_Siemens')
-    #aggregate_and_save_slices(mat_dir, dataset_dir, siemens_test_list, 'Test_Siemens')
+    aggregate_and_save_patches(mat_dir, dataset_dir, ge_train_list, 'Train_GE')
+    aggregate_and_save_patches(mat_dir, dataset_dir, ge_test_list, 'Test_GE')
+    aggregate_and_save_patches(mat_dir, dataset_dir, siemens_train_list, 'Train_Siemens')
+    aggregate_and_save_patches(mat_dir, dataset_dir, siemens_test_list, 'Test_Siemens')
+
+
+
+def aggregate_and_save_patches(png_dir, dataset_dir, img_list, sub_dir):
+        for img in img_list:
+            current_img = os.path.join(png_dir, img)
+
+            if not os.path.exists(os.path.join(dataset_dir, sub_dir)):
+                os.mkdir(os.path.join(dataset_dir, sub_dir))
+
+            patch_list = os.listdir(current_img)
+            patch_list.sort()
+            patch_list = patch_list[int(len(patch_list)/4):int(3*len(patch_list)/4)]
+
+            for patch in patch_list:
+                copyfile(os.path.join(current_img, patch), os.path.join(dataset_dir, sub_dir, patch))
 
 
 
@@ -104,17 +120,18 @@ def copy_mat_files(src_dir, dest_dir):
     for img in img_list:
         copyfile(os.path.join(mat_dir, img, 'pre_img.mat'), os.path.join(dest_dir, img + '.mat'))
         print("Copied: ", img)
-    #/home/adithya/Train_Subtype/Images/BRCA_DUKE_INVA01_27492
+    
 
-#mat_dir = os.path.join('/home', 'adithya', 'Train_Subtype', 'Images')
-#dataset_dir = os.path.join('/home', 'adithya', 'MRI_Dataset')
-#param_csv = os.path.join('/home', 'adithya', 'Breast_Style_Transfer', 'ctyle-transfer', 'scanner_params.csv')
-#param_dict = dict()
 
-#convert_mat_to_png(mat_dir, dataset_dir, param_csv, param_dict)
+mat_dir = os.path.join('/home', 'adithya', 'Normalized_MRIs')
+dataset_dir = os.path.join('/home', 'adithya', 'MRI_Dataset')
+param_csv = os.path.join('/home', 'adithya', 'Breast_Style_Transfer', 'ctyle-transfer', 'scanner_params.csv')
+param_dict = dict()
+
+convert_mat_to_png(mat_dir, dataset_dir, param_csv, param_dict)
 
 
 #flip_images(os.path.join('/home', 'adithya', 'MRI_Dataset', 'Test_Siemens', 'Test_Siemens'))
-copy_mat_files(os.path.join('/home', 'adithya', 'MRI_Dataset', 'Train_GE', 'Train_GE'), os.path.join('/home', 'adithya', 'Training_Set_Mat_Files'))
-copy_mat_files(os.path.join('/home', 'adithya', 'MRI_Dataset', 'Train_Siemens', 'Train_Siemens'), os.path.join('/home', 'adithya', 'Training_Set_Mat_Files'))
+#copy_mat_files(os.path.join('/home', 'adithya', 'MRI_Dataset', 'Train_GE', 'Train_GE'), os.path.join('/home', 'adithya', 'Training_Set_Mat_Files'))
+#copy_mat_files(os.path.join('/home', 'adithya', 'MRI_Dataset', 'Train_Siemens', 'Train_Siemens'), os.path.join('/home', 'adithya', 'Training_Set_Mat_Files'))
 
