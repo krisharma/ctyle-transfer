@@ -70,11 +70,18 @@ def aggregate_and_save_patches(png_dir, dataset_dir, img_list, sub_dir):
                 os.mkdir(os.path.join(dataset_dir, sub_dir))
 
             patch_list = os.listdir(current_img)
-            patch_list.sort()
-            patch_list = patch_list[int(len(patch_list)/4):int(3*len(patch_list)/4)]
+            numerical_patch_list = list()
+            for patch in patch_list:
+                numerical_patch_list.append(int(patch[patch.index('_', patch.index('Slice'))+1: patch.index('.')]))
+
+              
+            numerical_patch_list.sort()
+            numerical_patch_list = numerical_patch_list[int(len(numerical_patch_list)/4):int(3*len(numerical_patch_list)/4)]
 
             for patch in patch_list:
-                copyfile(os.path.join(current_img, patch), os.path.join(dataset_dir, sub_dir, patch))
+                numerical_patch = int(patch[patch.index('_', patch.index('Slice'))+1: patch.index('.')])
+                if numerical_patch in numerical_patch_list:
+                    copyfile(os.path.join(current_img, patch), os.path.join(dataset_dir, sub_dir, patch))
 
 
 
@@ -128,10 +135,9 @@ dataset_dir = os.path.join('/home', 'adithya', 'MRI_Dataset')
 param_csv = os.path.join('/home', 'adithya', 'Breast_Style_Transfer', 'ctyle-transfer', 'scanner_params.csv')
 param_dict = dict()
 
-convert_mat_to_png(mat_dir, dataset_dir, param_csv, param_dict)
 
-
-#flip_images(os.path.join('/home', 'adithya', 'MRI_Dataset', 'Test_Siemens', 'Test_Siemens'))
+#convert_mat_to_png(mat_dir, dataset_dir, param_csv, param_dict)
+flip_images(os.path.join('/home', 'adithya', 'MRI_Dataset', 'Train_Siemens'))
 #copy_mat_files(os.path.join('/home', 'adithya', 'MRI_Dataset', 'Train_GE', 'Train_GE'), os.path.join('/home', 'adithya', 'Training_Set_Mat_Files'))
 #copy_mat_files(os.path.join('/home', 'adithya', 'MRI_Dataset', 'Train_Siemens', 'Train_Siemens'), os.path.join('/home', 'adithya', 'Training_Set_Mat_Files'))
 
