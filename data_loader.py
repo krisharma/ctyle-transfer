@@ -4,6 +4,7 @@ import os
 import torch
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
+from datasets import ImageDataset
 
 """Creates training and test data loaders and pipeline."""
 def get_data_loader(opts, image_type):
