@@ -55,9 +55,9 @@ class ResnetBlock2d(nn.Module):
         return out
 
 """Defines the architecture of the generator network (both generators G_XtoY an G_YtoX have the same architecture)."""
-class CycleGenerator2d(nn.Module):
+class CycleGenerator(nn.Module):
     def __init__(self, init_zero_weights=False):
-        super(CycleGenerator2d, self).__init__()
+        super(CycleGenerator, self).__init__()
 
         ####   GENERATOR ARCHITECTURE   ####
 
@@ -117,7 +117,7 @@ class CycleGenerator2d(nn.Module):
 
 
 #XNet encoder
-class XNetEncoder2d(nn.Module):
+class XNetEncoder(nn.Module):
     def __init__(self, init_zero_weights=False):
         super(XNetEncoder2d, self).__init__()
 
@@ -156,7 +156,7 @@ class XNetEncoder2d(nn.Module):
 
 
 #XNet decoder
-class XNetDecoder2d(nn.Module):
+class XNetDecoder(nn.Module):
     def __init__(self, init_zero_weights=False):
         super(XNetDecoder2d, self).__init__()
 
@@ -173,7 +173,7 @@ class XNetDecoder2d(nn.Module):
         return out
 
 #XNet translator
-class XNetTranslator2d(nn.Module):
+class XNetTranslator(nn.Module):
     def __init__(self, init_zero_weights=False):
         super(XNetTranslator2d, self).__init__()
 
@@ -202,7 +202,7 @@ class XNetTranslator2d(nn.Module):
         return out
 
 """Defines the architecture of the discriminator network (both discriminators D_X and D_Y have the same architecture)."""
-class PatchGANDiscriminator2d(nn.Module):
+class PatchGANDiscriminator(nn.Module):
     def __init__(self):
         super(PatchGANDiscriminator2d, self).__init__()
 
