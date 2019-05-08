@@ -6,22 +6,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
-"""
-torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True) --> N x Cin x H x W
-torch.nn.Conv3d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True) --> N x Cin x D X H X W
-
-torch.nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True) --> N x Cin x H x W
-torch.nn.ConvTranspose3d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True) --> N x Cin x D X H X W
-
-# TODO:  look @ documentation carefully
-torch.nn.ReflectionPad2d(padding)
-torch.nn.functional.pad(input, pad, mode='constant', value = 0)
-
-torch.nn.InstanceNorm2d(num_features, eps=1e-05, momentum=0.1, affine=False, track_running_stats=False) --> N x C x H x W
-torch.nn.InstanceNorm3d(num_features, eps=1e-05, momentum=0.1, affine=False, track_running_stats=False) --> N x C x D x H x W
-"""
-
 #########################################
 ################2D MODELS###############
 #########################################
@@ -48,7 +32,7 @@ def conv2d(in_channels, out_channels, kernel_size, stride=2, padding=1, instance
        layers.append(nn.ReflectionPad2d(3))
 
     conv_layer = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
-    
+
     if init_zero_weights:
        conv_layer.weight.data = torch.randn(out_channels, in_channels, kernel_size, kernel_size) * 0.001
 
@@ -114,7 +98,7 @@ class CycleGenerator2d(nn.Module):
         out = F.relu(self.conv1(x))
         out = F.relu(self.conv2(out))
         out = F.relu(self.conv3(out))
-       
+
         out = F.relu(self.resnet_block1(out))
         out = F.relu(self.resnet_block2(out))
         out = F.relu(self.resnet_block3(out))
@@ -124,13 +108,13 @@ class CycleGenerator2d(nn.Module):
         out = F.relu(self.resnet_block7(out))
         out = F.relu(self.resnet_block8(out))
         out = F.relu(self.resnet_block9(out))
-        
+
         out = F.relu(self.deconv2d_1(out))
         out = F.relu(self.deconv2d_2(out))
         out = F.tanh(self.conv4(out))
-        
+
         return out
-    
+
 
 #XNet encoder
 class XNetEncoder2d(nn.Module):
@@ -157,7 +141,7 @@ class XNetEncoder2d(nn.Module):
         out = F.relu(self.conv1(x))
         out = F.relu(self.conv2(out))
         out = F.relu(self.conv3(out))
-       
+
         out = F.relu(self.resnet_block1(out))
         out = F.relu(self.resnet_block2(out))
         out = F.relu(self.resnet_block3(out))
@@ -167,10 +151,10 @@ class XNetEncoder2d(nn.Module):
         out = F.relu(self.resnet_block7(out))
         out = F.relu(self.resnet_block8(out))
         out = F.relu(self.resnet_block9(out))
-        
+
         return out
 
-    
+
 #XNet decoder
 class XNetDecoder2d(nn.Module):
     def __init__(self, init_zero_weights=False):
@@ -185,14 +169,14 @@ class XNetDecoder2d(nn.Module):
         out = F.relu(self.deconv2d_1(x))
         out = F.relu(self.deconv2d_2(out))
         out = F.tanh(self.conv4(out))
-        
+
         return out
 
 #XNet translator
 class XNetTranslator2d(nn.Module):
     def __init__(self, init_zero_weights=False):
         super(XNetTranslator2d, self).__init__()
-        
+
         # 2. Define the transformation part of the generator
         self.resnet_block1 = ResnetBlock2d(conv_dim=256)
         self.resnet_block2 = ResnetBlock2d(conv_dim=256)
@@ -214,7 +198,7 @@ class XNetTranslator2d(nn.Module):
         out = F.relu(self.resnet_block7(out))
         out = F.relu(self.resnet_block8(out))
         out = F.relu(self.resnet_block9(out))
-        
+
         return out
 
 """Defines the architecture of the discriminator network (both discriminators D_X and D_Y have the same architecture)."""

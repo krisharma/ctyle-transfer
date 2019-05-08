@@ -17,8 +17,8 @@ import scipy.misc
 
 # Local imports
 import utils
-from data_loader import get_data_loader2d
-from models import CycleGenerator2d, PatchGANDiscriminator2d
+from data_loader import get_data_loader
+from models import CycleGenerator, PatchGANDiscriminator
 
 
 SEED = 14
@@ -89,7 +89,7 @@ def load_checkpoint(opts):
     g_optimizer = optim.Adam(g_params, lr=opts.lr, betas=(opts.beta1, opts.beta2))
     dx_optimizer = optim.Adam(dx_params, lr=opts.lr, betas=(opts.beta1, opts.beta2))
     dy_optimizer = optim.Adam(dy_params, lr=opts.lr, betas=(opts.beta1, opts.beta2))
-    
+
     if(opts.start_iter > 0):
         G_XtoY.load_state_dict(torch.load(G_XtoY_path, map_location=lambda storage, loc: storage))
         G_YtoX.load_state_dict(torch.load(G_YtoX_path, map_location=lambda storage, loc: storage))
@@ -160,7 +160,7 @@ def save_samples(iteration, fixed_Y, fixed_X, G_YtoX, G_XtoY, opts):
         2. Saves generated samples every opts.sample_every iterations
 """
 def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader_Y, opts):
-          
+
     #Initialize generators, discriminators, and optimizers
     G_XtoY, G_YtoX, D_X, D_Y, g_optimizer, dx_optimizer, dy_optimizer = load_checkpoint(opts)
 
@@ -176,15 +176,15 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 
     iter_per_epoch = min(len(iter_X), len(iter_Y))
 
- 
+
     # loss terms
     MSE_loss = nn.MSELoss().cuda()
     L1_loss = nn.L1Loss().cuda()
-    
+
     # image store (used to stabilize discriminator training)
     fake_X_store = util.ImagePool(50)
     fake_Y_store = util.ImagePool(50)
-   
+
     for iteration in range(1, opts.train_iters+1):
         # Reset data_iter for each epoch
         if iteration % iter_per_epoch == 0:
@@ -196,33 +196,33 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 
         images_Y, labels_Y = iter_Y.next()
         images_Y, labels_Y = utils.to_var(images_Y), utils.to_var(labels_Y).long().squeeze()
-        
+
         #### GENERATOR TRAINING ####
         g_optimizer.zero_grad()
 
         # 1. GAN loss term
         fake_X = G_YtoX(images_Y)
         fake_Y = G_XtoY(images_X)
-        
+
         d_x_pred = D_X(fake_X)
         d_y_pred = D_Y(fake_Y)
 
         #want d_x_pred to be as close to 1(real) as possible
         gan_loss = MSE_loss(d_x_pred, Variable(torch.ones(d_x_pred.size()).cuda())) + MSE_loss(d_y_pred, Variable(torch.ones(d_y_pred.size()).cuda()))
-        
-                            
+
+
         #2. Identity loss term
         identity_X = G_YtoX(images_X)
         identity_Y = G_XtoY(images_Y)
 
-        identity_loss = L1_loss(images_X, identity_X) + L1_loss(images_Y, identity_Y) 
+        identity_loss = L1_loss(images_X, identity_X) + L1_loss(images_Y, identity_Y)
 
         #3. Cycle consistency loss term
         reconstructed_Y = G_XtoY(fake_X)
         reconstructed_X = G_YtoX(fake_Y)
 
-        cycle_consistency_loss = L1_loss(images_X, reconstructed_X) + L1_loss(images_Y, reconstructed_Y) 
-                            
+        cycle_consistency_loss = L1_loss(images_X, reconstructed_X) + L1_loss(images_Y, reconstructed_Y)
+
         #Final GAN Loss Term
         g_loss = gan_loss + opts.identity_lambda * identity_loss + opts.cycle_consistency_lambda * cycle_consistency_loss
 
@@ -231,17 +231,17 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 
 
         #### DISCRIMINATOR TRAINING ####
-                            
+
         # 1. Compute the discriminator x loss
         dx_optimizer.zero_grad()
 
         d_x_pred = D_X(images_X)
-        D_X_real_loss = MSE_loss(d_x_pred, Variable(torch.ones(d_x_pred.size()).cuda())) 
-        
+        D_X_real_loss = MSE_loss(d_x_pred, Variable(torch.ones(d_x_pred.size()).cuda()))
+
         fake_X = fake_X_store.query(fake_X)
         d_x_pred = D_X(fake_X)
         D_X_fake_loss = MSE_loss(d_x_pred, Variable(torch.zeros(d_x_pred.size()).cuda()))
-                       
+
         D_X_loss = (D_X_real_loss + D_X_fake_loss) * .5
         D_X_loss.backward()
         dx_optimizer.step()
@@ -250,16 +250,16 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
         dy_optimizer.zero_grad()
 
         d_y_pred = D_X(images_Y)
-        D_Y_real_loss = MSE_loss(d_y_pred, Variable(torch.ones(d_y_pred.size()).cuda())) 
-        
+        D_Y_real_loss = MSE_loss(d_y_pred, Variable(torch.ones(d_y_pred.size()).cuda()))
+
         fake_Y = fake_Y_store.query(fake_Y)
         d_y_pred = D_Y(fake_Y)
         D_Y_fake_loss = MSE_loss(d_y_pred, Variable(torch.zeros(d_y_pred.size()).cuda()))
-                       
+
         D_Y_loss = (D_Y_real_loss + D_Y_fake_loss) * .5
         D_Y_loss.backward()
         dy_optimizer.step()
-                                                    
+
         # Print the log info
         if iteration % opts.log_step == 0:
             print('Iteration [{:5d}/{:5d}] | d_Y_loss: {:6.4f} | d_X_loss: {:6.4f} | g_loss: {:6.4f}'
@@ -276,8 +276,8 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 """Loads the data, creates checkpoint and sample directories, and starts the training loop."""
 def main(opts):
     # Create train and test dataloaders for images from the two domains X and Y
-    dataloader_X, test_dataloader_X = get_data_loader2d(img_type=opts.X, opts=opts)
-    dataloader_Y, test_dataloader_Y = get_data_loader2d(img_type=opts.Y, opts=opts)
+    dataloader_X, test_dataloader_X = get_data_loader(opts=opts, image_type=opts.X)
+    dataloader_Y, test_dataloader_Y = get_data_loader(opts=opts, image_type=opts.Y)
 
     # Create checkpoint and sample directories
     utils.create_dir(opts.checkpoint_dir)
@@ -319,9 +319,9 @@ def create_parser():
     parser.add_argument('--identity_lambda', type=float, default=5.0)
 
     # Data sources
-    parser.add_argument('--X', type=str, default='A', choices=['A', 'B'], help='Choose the type of images for domain X.')
-    parser.add_argument('--Y', type=str, default='B', choices=['A', 'B'], help='Choose the type of images for domain Y.')
-
+    parser.add_argument('--data_dir', type=str, default=os.path.join('/home', 'adithya', 'Breast_Style_Transfer', 'horse2zebra'))
+    parser.add_argument('--X', type=str, default='A')
+    parser.add_argument('--Y', type=str, default='B')
 
     # Saving directories and checkpoint/sample iterations
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_cyclegan')
