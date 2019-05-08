@@ -172,8 +172,8 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 
     # Set fixed data from domains X and Y for sampling. These are images that are held constant throughout training, that allow us to inspect the model's performance.
 
-    fixed_X = utils.to_var(test_iter_X.next()[0])
-    fixed_Y = utils.to_var(test_iter_Y.next()[0])
+    fixed_X = utils.to_var(test_iter_X.next())
+    fixed_Y = utils.to_var(test_iter_Y.next())
 
     iter_per_epoch = min(len(iter_X), len(iter_Y))
 
