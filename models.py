@@ -119,7 +119,7 @@ class CycleGenerator(nn.Module):
 #XNet encoder
 class XNetEncoder(nn.Module):
     def __init__(self, init_zero_weights=False):
-        super(XNetEncoder2d, self).__init__()
+        super(XNetEncoder, self).__init__()
 
         # 1. Define the encoder part of the generator (that extracts features from the input image)
         self.conv1 = conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=1, padding=0, reflect_pad=True)
@@ -158,7 +158,7 @@ class XNetEncoder(nn.Module):
 #XNet decoder
 class XNetDecoder(nn.Module):
     def __init__(self, init_zero_weights=False):
-        super(XNetDecoder2d, self).__init__()
+        super(XNetDecoder, self).__init__()
 
         # 3. Define the decoder part of the generator (that builds up the output image from features)
         self.deconv2d_1 = deconv2d(in_channels=256, out_channels=128, kernel_size=3, stride=2, padding=1, output_padding=1)
@@ -175,7 +175,7 @@ class XNetDecoder(nn.Module):
 #XNet translator
 class XNetTranslator(nn.Module):
     def __init__(self, init_zero_weights=False):
-        super(XNetTranslator2d, self).__init__()
+        super(XNetTranslator, self).__init__()
 
         # 2. Define the transformation part of the generator
         self.resnet_block1 = ResnetBlock2d(conv_dim=256)
@@ -204,7 +204,7 @@ class XNetTranslator(nn.Module):
 """Defines the architecture of the discriminator network (both discriminators D_X and D_Y have the same architecture)."""
 class PatchGANDiscriminator(nn.Module):
     def __init__(self):
-        super(PatchGANDiscriminator2d, self).__init__()
+        super(PatchGANDiscriminator, self).__init__()
 
         #### ARCHITECTURE ####
         self.conv1 = conv2d(in_channels=3, out_channels=64, kernel_size=4, stride=2, padding=1, instance_norm=False)

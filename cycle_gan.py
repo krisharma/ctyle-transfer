@@ -32,10 +32,10 @@ if torch.cuda.is_available():
 
 """Builds the generators and discriminators using the CycleGenerator."""
 def create_model(opts):
-    G_XtoY = CycleGenerator2d(init_zero_weights=opts.init_zero_weights)
-    G_YtoX = CycleGenerator2d(init_zero_weights=opts.init_zero_weights)
-    D_X = PatchGANDiscriminator2d()
-    D_Y = PatchGANDiscriminator2d()
+    G_XtoY = CycleGenerator(init_zero_weights=opts.init_zero_weights)
+    G_YtoX = CycleGenerator(init_zero_weights=opts.init_zero_weights)
+    D_X = PatchGANDiscriminator()
+    D_Y = PatchGANDiscriminator()
 
     if torch.cuda.is_available():
         G_XtoY.cuda()
@@ -171,8 +171,9 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
     test_iter_Y = iter(test_dataloader_Y)
 
     # Set fixed data from domains X and Y for sampling. These are images that are held constant throughout training, that allow us to inspect the model's performance.
-    fixed_X = utils.to_var(test_iter_X.next()[0])
-    fixed_Y = utils.to_var(test_iter_Y.next()[0])
+    fixed_X = Variable(test_iter_X.next().cuda())
+    fixed_Y = Variable(test_iter_Y.next().cuda())
+    print(fixed_X.shape, fixed_Y.shape)
 
     iter_per_epoch = min(len(iter_X), len(iter_Y))
 
@@ -191,12 +192,13 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
             iter_X = iter(dataloader_X)
             iter_Y = iter(dataloader_Y)
 
-        images_X, labels_X = iter_X.next()
-        images_X, labels_X = utils.to_var(images_X), utils.to_var(labels_X).long().squeeze()
+        images_X = Variable(iter_X.next().cuda())
+        images_Y = Variable(iter_Y.next().cuda())
 
-        images_Y, labels_Y = iter_Y.next()
-        images_Y, labels_Y = utils.to_var(images_Y), utils.to_var(labels_Y).long().squeeze()
+        images_X.cuda()
+        images_Y.cuda()
 
+        
         #### GENERATOR TRAINING ####
         g_optimizer.zero_grad()
 
@@ -319,7 +321,7 @@ def create_parser():
     parser.add_argument('--identity_lambda', type=float, default=5.0)
 
     # Data sources
-    parser.add_argument('--data_dir', type=str, default=os.path.join('/home', 'adithya', 'Breast_Style_Transfer', 'horse2zebra'))
+    parser.add_argument('--data_dir', type=str, default=os.path.join('/home', 'adithya', 'Breast_Style_Transfer','Datasets', 'horse2zebra'))
     parser.add_argument('--X', type=str, default='A')
     parser.add_argument('--Y', type=str, default='B')
 
