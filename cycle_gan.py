@@ -171,9 +171,9 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
     test_iter_Y = iter(test_dataloader_Y)
 
     # Set fixed data from domains X and Y for sampling. These are images that are held constant throughout training, that allow us to inspect the model's performance.
-    fixed_X = Variable(test_iter_X.next().cuda())
-    fixed_Y = Variable(test_iter_Y.next().cuda())
-    print(fixed_X.shape, fixed_Y.shape)
+
+    fixed_X = utils.to_var(test_iter_X.next()[0])
+    fixed_Y = utils.to_var(test_iter_Y.next()[0])
 
     iter_per_epoch = min(len(iter_X), len(iter_Y))
 
@@ -192,13 +192,13 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
             iter_X = iter(dataloader_X)
             iter_Y = iter(dataloader_Y)
 
-        images_X = Variable(iter_X.next().cuda())
-        images_Y = Variable(iter_Y.next().cuda())
 
-        images_X.cuda()
-        images_Y.cuda()
+        images_X, labels_X = iter_X.next()
+        images_X, labels_X = utils.to_var(images_X), utils.to_var(labels_X).long().squeeze()
+       
+        images_Y, labels_Y = iter_Y.next()
+        images_Y, labels_Y = utils.to_var(images_Y), utils.to_var(labels_Y).long().squeeze()
 
-        
         #### GENERATOR TRAINING ####
         g_optimizer.zero_grad()
 
