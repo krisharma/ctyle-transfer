@@ -172,8 +172,8 @@ def training_loop(dataloader_X, dataloader_Y, test_dataloader_X, test_dataloader
 
     # Set fixed data from domains X and Y for sampling. These are images that are held constant throughout training, that allow us to inspect the model's performance.
 
-    fixed_X = utils.to_var(test_iter_X.next())
-    fixed_Y = utils.to_var(test_iter_Y.next())
+    fixed_X = utils.to_var(test_iter_X.next()[0])
+    fixed_Y = utils.to_var(test_iter_Y.next()[0])
 
     iter_per_epoch = min(len(iter_X), len(iter_Y))
 
@@ -312,7 +312,7 @@ def create_parser():
 
     # Training hyper-parameters
     parser.add_argument('--train_iters', type=int, default=200000, help='The number of training iterations to run (you can Ctrl-C out earlier if you want).')
-    parser.add_argument('--batch_size', type=int, default=2, help='The number of images in a batch.')
+    parser.add_argument('--batch_size', type=int, default=4, help='The number of images in a batch.')
     parser.add_argument('--num_workers', type=int, default=0, help='The number of threads to use for the DataLoader.')
     parser.add_argument('--lr', type=float, default=0.0003, help='The learning rate (default 0.0003)')
     parser.add_argument('--beta1', type=float, default=0.5)
